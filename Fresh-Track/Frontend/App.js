@@ -1,6 +1,16 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
-import { RFValue } from 'react-native-responsive-fontsize';
+import { useFonts, 
+  Inter_100Thin,
+  Inter_200ExtraLight,
+  Inter_300Light,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  Inter_800ExtraBold,
+  Inter_900Black, 
+} from '@expo-google-fonts/inter';
 // nav icons
 import { Ionicons } from "@expo/vector-icons"
 import Feather from '@expo/vector-icons/Feather';
@@ -18,6 +28,20 @@ import AddItems from './pages/AddItems'
 const NavTab = createBottomTabNavigator()
 
 export default function App() {
+  const [fontsLoaded] = useFonts({
+    Inter_100Thin,
+    Inter_200ExtraLight,
+    Inter_300Light,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    Inter_800ExtraBold,
+    Inter_900Black,
+  });
+
+  if (!fontsLoaded) return null;
+
   return (
     <NavigationContainer>
       <NavTab.Navigator
@@ -54,11 +78,4 @@ export default function App() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+
