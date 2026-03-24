@@ -2,12 +2,20 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import { Text, StyleSheet, View, TextInput } from "react-native"
 import { RFValue } from 'react-native-responsive-fontsize';
 import DashboardWidget from "../components/dashboardWidget";
-import { Feather } from "@expo/vector-icons"
+import ExpiringWidget from "../components/ExpiringSoonWidget";
+import { Feather } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 export default function Home(){
 
     const dummyItems = ["chicken", "beef", "yogurt", "milk", "eggs", "broccoli", "apples", "mango", "cake", "cream", "protein shake", "mayo", "bread"];
-    const dummyExpiring = ["chicken", "milk", "cake"];
+    const dummyExpiring = [
+        {id: 1, name: "chicken", expiryDate: "2026-03-27"},
+        {id: 2, name: "milk", expiryDate: "2026-03-30"},
+        {id: 3, name: "eggs", expiryDate: "2026-04-03"}
+    ];
+
+    const navigation = useNavigation()
 
     return(
         <>
@@ -29,6 +37,39 @@ export default function Home(){
                     <View style={ styles.dashWidgetContainer}>
                         <DashboardWidget count={dummyItems.length} title="Items Tracked"/>
                         <DashboardWidget count={dummyExpiring.length} title="Expiring Soon"/>
+                    </View>
+
+                    <View style={{ marginTop: 50 }}>
+                        {dummyExpiring.length > 0 ? (
+                            <>
+                                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingRight: 2, marginBottom: 50}}>
+                                    <Text style={styles.h3}>Needs Attention</Text>
+                                    <Text style={{ color: "#50863F", textDecorationLine: "underline"}} onPress={() => dummyExpiring}>See All</Text>
+                                </View>
+                                <View>
+                                    {
+                                        dummyExpiring.map((item) => {
+                                            const today = new Date();
+                                            const expiry = new Date(dummyExpiring.expiryDate);
+
+                                            const diffTime = expiry - today;
+                                            const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // convert ms to days
+                                            return <ExpiringWidget name={item.name} expireMessage={`This item is expiring in ${daysLeft} days!`} expiringIn={daysLeft}/>
+                                        })
+                                    }
+                                </View>
+                            </>
+                            
+                        ) : dummyItems.length > 0 && dummyExpiring.length <= 0 ? (
+                            <View><Text>dummy</Text></View>
+                        ) : (
+                            <View>
+                                <Text 
+                                    style={{ textDecorationLine: "underline", fontSize: RFValue(20), fontFamily: 'Inter_600SemiBold'}}
+                                    onPress={() => navigation.navigate("AddItemsPage")}>Add items to get started
+                                </Text>
+                            </View>
+                        )}
                     </View>
 
                 </View>
@@ -59,6 +100,10 @@ const styles = StyleSheet.create({
         fontSize: RFValue(24),
         fontFamily: 'Inter_600SemiBold'
     },
+    h3: {
+        fontSize: RFValue(20),
+        fontFamily: 'Inter_600SemiBold'
+    },
     dashWidgetContainer: {
         marginTop: 50, 
         alignItems: "center", 
@@ -69,7 +114,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2, 
         shadowRadius: 5, 
         // Android
-        elevation: 4 
+        elevation: 4
     },
     searchBar: {
         marginTop: 20,

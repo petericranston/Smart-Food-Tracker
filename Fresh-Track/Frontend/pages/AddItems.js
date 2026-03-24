@@ -1,3 +1,7 @@
+import { Text } from "react-native"
+
 export default function AddItems(){
-    return
+    return(
+        <Text style={{marginTop: 45}}>Add items page</Text>
+    )
 }
