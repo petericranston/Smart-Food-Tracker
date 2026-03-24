@@ -54,7 +54,11 @@ export default function Home(){
 
                                             const diffTime = expiry - today;
                                             const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // convert ms to days
-                                            return <ExpiringWidget name={item.name} expireMessage={`This item is expiring in ${daysLeft} days!`} expiringIn={daysLeft}/>
+                                            return <ExpiringWidget 
+                                                image={require("../assets/foodplaceholders/mschicken.png")} name={item.name} 
+                                                expireMessage={`This item is expiring in ${daysLeft} days!`} expiringIn={daysLeft} 
+                                                dateStyling={{backgroundColor: "red", justifyContent: "center"}}
+                                            />
                                         })
                                     }
                                 </View>

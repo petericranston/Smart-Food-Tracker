@@ -3,11 +3,15 @@ import { RFValue } from "react-native-responsive-fontsize";
 
 export default function ExpiringWidget({ image, name, expireMessage, expiringIn, dateStyling }){
     return(
-        <View style={{ flexDirection: "row" }}>
+        <View style={{ 
+            flexDirection: "row", gap: 10, marginBottom: 20, 
+            borderColor: "#B5B5B540", borderWidth: 2, padding: 20, 
+            borderRadius: 10, backgroundColor: "#fff" 
+        }}>
             <Image source={image} style={{ width: 50, height: 50 }}></Image>
             <View style={{ flexDirection: "column" }}>
-                <Text>{name}</Text>
-                <Text>{expireMessage}</Text>
+                <Text style={{fontSize: RFValue(16), marginBottom: 5, fontFamily: 'Inter_500Medium'}}>{name}</Text>
+                <Text style={{ fontSize: RFValue(9), width: "70%", color: "#8E8E8E"}}>{expireMessage}</Text>
             </View>
             <View style={dateStyling}>
                 <Text>{expiringIn}</Text>
