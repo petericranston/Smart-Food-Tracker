@@ -9,7 +9,7 @@ import { useNavigation } from "@react-navigation/native";
 export default function Home(){
     const dummyItems = ["chicken", "beef", "yogurt", "milk", "eggs", "broccoli", "apples", "mango", "cake", "cream", "protein shake", "mayo", "bread"];
     const dummyExpiring = [
-        {id: 1, name: "chicken", expiryDate: "2026-04-10"},
+        {id: 1, name: "chicken", expiryDate: "2026-04-05"},
         {id: 2, name: "milk", expiryDate: "2026-04-06"},
         {id: 3, name: "eggs", expiryDate: "2026-04-20"}
     ];
@@ -54,10 +54,15 @@ export default function Home(){
 
                                                 const diffTime = expiry - today;
                                                 const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // convert ms to days
+                                                const getExpiryColor = (daysLeft) => {
+                                                    if (daysLeft <= 2) return "#ff1717";  // red - expires in a couple days
+                                                    if (daysLeft <= 6) return "#ff7723";  // orange - very soon
+                                                    return "#50863F";  // green - plenty of time
+                                                };
                                                 return <ExpiringWidget 
                                                     image={require("../assets/foodplaceholders/mschicken.png")} name={item.name} 
                                                     expireMessage={`This item is expiring in ${daysLeft} days!`} expiringIn={`${daysLeft} days`} 
-                                                    dateStyling={{backgroundColor: "red", justifyContent: "center", paddingLeft: 10, paddingRight: 10, height: 33, marginTop: 5, borderRadius: 10}}
+                                                    dateStyling={{backgroundColor: getExpiryColor(daysLeft), justifyContent: "center", paddingLeft: 10, paddingRight: 10, height: 33, marginTop: 5, borderRadius: 10}}
                                                 />
                                             })
                                         }
