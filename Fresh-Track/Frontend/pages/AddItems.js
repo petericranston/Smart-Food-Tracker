@@ -6,6 +6,14 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import Feather from '@expo/vector-icons/Feather';
 
 export default function AddItems(){
+    const dummyScan = [
+        {id: 1, name: "chicken", expiryDate: "2026-04-10", amount: 1},
+        {id: 2, name: "milk", expiryDate: "2026-04-26", amount: 1},
+        {id: 3, name: "eggs", expiryDate: "2026-04-23", amount: 2},
+        {id: 4, name: "broccoli", expiryDate: "2026-04-09", amount: 2},
+        {id: 5, name: "skyr yogurt", expiryDate: "2026-05-20", amount: 3},
+    ];
+
     return(
         <SafeAreaView style={styles.container}>
             <Text style={styles.h1} >Add items</Text>
@@ -25,6 +33,24 @@ export default function AddItems(){
                     <Feather name="search" size={40} color="white" />
                 </ItemInput>
             </View>
+
+            {/* line */}
+            <View style={{ 
+                height: 1, 
+                backgroundColor: '#B5B5B565', 
+                marginTop: 20,
+                // iOS
+                shadowColor: '#000000',
+                shadowOffset: { width: 2, height: 2 },
+                shadowOpacity: 0.8,
+                shadowRadius: 4,
+
+                // Android
+                elevation: 4,
+            }} />
+
+            
+
         </SafeAreaView>
     )
 }
