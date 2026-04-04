@@ -60,7 +60,7 @@ export default function Home(){
                                                     return "#50863F";  // green - plenty of time
                                                 };
                                                 return <ExpiringWidget 
-                                                    image={require("../assets/foodplaceholders/mschicken.png")} name={item.name} 
+                                                    key={item.id} image={require("../assets/foodplaceholders/mschicken.png")} name={item.name} 
                                                     expireMessage={`This item is expiring in ${daysLeft} days!`} expiringIn={`${daysLeft} days`} 
                                                     dateStyling={{backgroundColor: getExpiryColor(daysLeft), justifyContent: "center", paddingLeft: 10, paddingRight: 10, height: 33, marginTop: 5, borderRadius: 10}}
                                                 />
@@ -70,12 +70,12 @@ export default function Home(){
                                 </>
                                 
                             ) : dummyItems.length > 0 && dummyExpiring.length <= 0 ? (
-                                <View><Text>dummy</Text></View>
+                                <View><Text>What how is this possible?</Text></View>
                             ) : (
                                 <View>
                                     <Text 
                                         style={{ textDecorationLine: "underline", fontSize: RFValue(20), fontFamily: 'Inter_600SemiBold'}}
-                                        onPress={() => navigation.navigate("AddItemsPage")}>Add items to get started
+                                        onPress={() => navigation.navigate("AddItemsPage")}>Add items to get started!
                                     </Text>
                                 </View>
                             )}
