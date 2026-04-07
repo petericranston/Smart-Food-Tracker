@@ -5,16 +5,34 @@ import ItemInput from "../components/ItemInput";
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Feather from '@expo/vector-icons/Feather';
 import { useState } from "react";
+import ReceiptScanner from "../components/ReceiptScanner";
 
 export default function AddItems(){
-    const dummyScan = [
-        {id: 1, name: "chicken", expiryDate: "2026-04-10", amount: 1},
-        {id: 2, name: "milk", expiryDate: "2026-04-26", amount: 1},
-        {id: 3, name: "eggs", expiryDate: "2026-04-23", amount: 2},
-        {id: 4, name: "broccoli", expiryDate: "2026-04-09", amount: 2},
-        {id: 5, name: "skyr yogurt", expiryDate: "2026-05-20", amount: 3},
-    ];
+    const [scannedItems, setScannedItems] = useState([
+        { id: 1, quantity: 1, unit: "1kg", name: "Chicken Breast", expiryDate: "2026-03-07" },
+        { id: 2, quantity: 1, unit: "2kg", name: "Basmati Rice", expiryDate: null },
+        { id: 3, quantity: 2, unit: null, name: "Tender Stem Broccoli", expiryDate: "2026-03-06" },
+        { id: 4, quantity: 3, unit: null, name: "Frozen Raspberries", expiryDate: "2027-04-10" },
+        { id: 5, quantity: 3, unit: "1kg", name: "Skyr Yogurt", expiryDate: "2026-03-16" }
+    ]);
 
+    const formatExpiry = (expiryDate) => {
+        if (!expiryDate) return "-/-";
+        const date = new Date(expiryDate);
+        const now = new Date();
+
+        // show full date if it's more than a year away
+        const oneYearFromNow = new Date();
+        oneYearFromNow.setFullYear(now.getFullYear() + 1);
+
+        if (date > oneYearFromNow) {
+            return date.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
+        }
+
+        return date.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit" });
+    };
+
+    // Modal visibles
     const [receiptVisible, setReceiptVisible] = useState(false);
     const [barcodeVisible, setBarcodeVisible] = useState(false);
     const [searchVisible, setSearchVisible] = useState(false);
@@ -55,6 +73,19 @@ export default function AddItems(){
                     elevation: 4,
                 }} />
 
+                <View style={{ marginTop: 25, padding: 15, borderColor: "#B5B5B550", borderWidth: 2}}>
+                    {scannedItems.map((item) => {
+                        const displayUnit = item.unit ? `${item.quantity} x ${item.unit}` : `${item.quantity} x`;
+
+                        return (
+                            <View style={styles.itemsRow} key={item.id}>
+                                <Text style={{ fontSize: RFValue(14) }}>{displayUnit} {item.name}</Text>
+                                <Text style={{ color: "#888", fontSize: RFValue(14) }}>{formatExpiry(item.expiryDate)}</Text>
+                            </View>
+                        );
+                    })}
+                </View>
+
             </SafeAreaView>
 
         {/* ---------Modals--------- */}
@@ -65,14 +96,14 @@ export default function AddItems(){
                 animationType="slide"
                 onRequestClose={() => setReceiptVisible(false)}  // Android back button
             >
-                <SafeAreaView style={styles.container}>
+                <SafeAreaView style={styles.modalContainer}>
                     <TouchableOpacity 
                         onPress={() => setReceiptVisible(false)}
                         style={{ alignSelf: 'flex-end' }}
                     >
                         <Text style={{ fontSize: 24 }}>✕</Text>
                     </TouchableOpacity>
-                    <Text>Receipt</Text>
+                    <ReceiptScanner />
                 </SafeAreaView>
             </Modal>
 
@@ -83,7 +114,7 @@ export default function AddItems(){
                 animationType="slide"
                 onRequestClose={() => setBarcodeVisible(false)}  // Android back button
             >
-                <SafeAreaView style={styles.container}>
+                <SafeAreaView style={styles.modalContainer}>
                     <TouchableOpacity 
                         onPress={() => setBarcodeVisible(false)}
                         style={{ alignSelf: 'flex-end' }}
@@ -101,7 +132,7 @@ export default function AddItems(){
                 animationType="slide"
                 onRequestClose={() => setSearchVisible(false)}  // Android back button
             >
-                <SafeAreaView style={styles.container}>
+                <SafeAreaView style={styles.modalContainer}>
                     <TouchableOpacity 
                         onPress={() => setSearchVisible(false)}
                         style={{ alignSelf: 'flex-end' }}
@@ -119,9 +150,17 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#F8F5EC",
-        paddingTop: 25,
+        paddingTop: 20,
         paddingLeft: 25,
         paddingRight: 25
+    },
+    // this is because the modal kept bugging and would have a broken view
+    modalContainer: {
+        flex: 1,
+        backgroundColor: "#F8F5EC",
+        paddingTop: 15,
+        paddingLeft: 30,
+        paddingRight: 30
     },
     h2: {
         fontSize: RFValue(14),
@@ -135,5 +174,11 @@ const styles = StyleSheet.create({
         fontFamily: 'Inter_600SemiBold',
         textAlign: "center",
         marginBottom: 5
+    },
+    itemsRow: {
+        flexDirection: "row", 
+        justifyContent: "space-between", 
+        alignItems: "center", 
+        paddingVertical: 6,
     }
 })
