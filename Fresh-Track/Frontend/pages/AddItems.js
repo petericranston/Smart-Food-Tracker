@@ -6,8 +6,12 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import Feather from '@expo/vector-icons/Feather';
 import { useState } from "react";
 import ReceiptScanner from "../components/ReceiptScanner";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 
 export default function AddItems(){
+    const insets = useSafeAreaInsets();
+
     const [scannedItems, setScannedItems] = useState([
         { id: 1, quantity: 1, unit: "1kg", name: "Chicken Breast", expiryDate: "2026-03-07" },
         { id: 2, quantity: 1, unit: "2kg", name: "Basmati Rice", expiryDate: null },
@@ -93,10 +97,11 @@ export default function AddItems(){
             <Modal
                 visible={receiptVisible}
                 transparent={false}
+                statusBarTranslucent={true}
                 animationType="slide"
                 onRequestClose={() => setReceiptVisible(false)}  // Android back button
             >
-                <SafeAreaView style={styles.modalContainer}>
+                <SafeAreaView style={[styles.modalContainer, { paddingTop: insets.top + 15}]}>
                     <TouchableOpacity 
                         onPress={() => setReceiptVisible(false)}
                         style={{ alignSelf: 'flex-end' }}
@@ -158,7 +163,6 @@ const styles = StyleSheet.create({
     modalContainer: {
         flex: 1,
         backgroundColor: "#F8F5EC",
-        paddingTop: 15,
         paddingLeft: 30,
         paddingRight: 30
     },
