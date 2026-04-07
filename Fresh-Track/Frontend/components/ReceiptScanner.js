@@ -313,10 +313,9 @@ const styles = StyleSheet.create({
     marginTop: 30
   },
   title: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: '#111',
-    marginBottom: 20,
+    fontSize: RFValue(24),
+    fontFamily: 'Inter_600SemiBold',
+    marginBottom: 10,
   },
   uploadArea: {
     borderWidth: 1,
@@ -325,7 +324,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 16,
-    backgroundColor: '#fff',
+    backgroundColor: '#F8F5EC',
     minHeight: 200,
     justifyContent: 'center',
     alignItems: 'center',
