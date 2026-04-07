@@ -12,13 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function AddItems(){
     const insets = useSafeAreaInsets();
 
-    const [scannedItems, setScannedItems] = useState([
-        { id: 1, quantity: 1, unit: "1kg", name: "Chicken Breast", expiryDate: "2026-03-07" },
-        { id: 2, quantity: 1, unit: "2kg", name: "Basmati Rice", expiryDate: null },
-        { id: 3, quantity: 2, unit: null, name: "Tender Stem Broccoli", expiryDate: "2026-03-06" },
-        { id: 4, quantity: 3, unit: null, name: "Frozen Raspberries", expiryDate: "2027-04-10" },
-        { id: 5, quantity: 3, unit: "1kg", name: "Skyr Yogurt", expiryDate: "2026-03-16" }
-    ]);
+    const [scannedItems, setScannedItems] = useState([]);
 
     const formatExpiry = (expiryDate) => {
         if (!expiryDate) return "-/-";
@@ -78,16 +72,20 @@ export default function AddItems(){
                 }} />
 
                 <View style={{ marginTop: 25, padding: 15, borderColor: "#B5B5B550", borderWidth: 2}}>
-                    {scannedItems.map((item) => {
-                        const displayUnit = item.unit ? `${item.quantity} x ${item.unit}` : `${item.quantity} x`;
+                    {scannedItems.length > 0 ? (
+                        scannedItems.map((item) => {
+                            const displayUnit = item.unit ? `${item.quantity} x ${item.unit}` : `${item.quantity} x`;
 
-                        return (
-                            <View style={styles.itemsRow} key={item.id}>
-                                <Text style={{ fontSize: RFValue(14) }}>{displayUnit} {item.name}</Text>
-                                <Text style={{ color: "#888", fontSize: RFValue(14) }}>{formatExpiry(item.expiryDate)}</Text>
-                            </View>
-                        );
-                    })}
+                            return (
+                                <View style={styles.itemsRow} key={item.id}>
+                                    <Text style={{ fontSize: RFValue(14) }}>{displayUnit} {item.name}</Text>
+                                    <Text style={{ color: "#888", fontSize: RFValue(14) }}>{formatExpiry(item.expiryDate)}</Text>
+                                </View>
+                            );
+                        })
+                    ):(
+                        <Text style={{ textAlign: "center", fontSize: RFValue(14)}}>Added items will show here!</Text>
+                    )}
                 </View>
 
             </SafeAreaView>
@@ -108,7 +106,19 @@ export default function AddItems(){
                     >
                         <Text style={{ fontSize: 24 }}>✕</Text>
                     </TouchableOpacity>
-                    <ReceiptScanner />
+                    <ReceiptScanner onScanComplete={(data) => {
+                        const mapped = data.products.map((product, index) => ({
+                            id: index + 1,
+                            name: product.product_name,
+                            expiryDate: product.product_expiration_date 
+                                ? product.product_expiration_date.split('-').reverse().join('-') // converts DD-MM-YYYY to YYYY-MM-DD
+                                : null,
+                            foodGroup: product.food_group,
+                            storageState: product.storage_state,
+                        }));
+                        setScannedItems(mapped);
+                        setReceiptVisible(false); // close modal after scan
+                    }} />
                 </SafeAreaView>
             </Modal>
 

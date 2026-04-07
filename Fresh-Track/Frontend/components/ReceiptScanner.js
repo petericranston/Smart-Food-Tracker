@@ -19,7 +19,7 @@ const openai = new OpenAI({
     dangerouslyAllowBrowser: true,
 });
 
-export default function ReceiptScanner() {
+export default function ReceiptScanner({ onScanComplete }) {
     const [image, setImage] = useState(null);
     const [receipt, setReceipt] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -256,6 +256,7 @@ export default function ReceiptScanner() {
             const text = result.choices[0]?.message?.content ?? '';
             const parsed = safeParseJson(String(text));
             setReceipt(parsed);
+            onScanComplete(parsed); // sending data to the display in AddItems.js
         } catch (err) {
             Alert.alert('Error', 'Could not scan receipt. Try a clearer photo.');
             console.error(err);
