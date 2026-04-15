@@ -16,8 +16,18 @@ import Feather from "@expo/vector-icons/Feather";
 import { useState } from "react";
 import ReceiptScanner from "../components/ReceiptScanner";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function AddItems() {
+  useEffect(() => {
+    const loadUser = async () => {
+      const savedUsername = await AsyncStorage.getItem("username");
+      if (savedUsername) setUsername(savedUsername);
+    };
+    loadUser();
+  }, []);
+
   const API_URL = "http://localhost:3001";
 
   const insets = useSafeAreaInsets();
@@ -244,7 +254,7 @@ export default function AddItems() {
         animationType="slide"
         onRequestClose={() => setSearchVisible(false)} // Android back button
       >
-        <SafeAreaView style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { paddingTop: 50 }]}>
           <TouchableOpacity
             onPress={() => setSearchVisible(false)}
             style={{ alignSelf: "flex-end" }}
@@ -294,7 +304,7 @@ export default function AddItems() {
                 </View>
               ))}
           </ScrollView>
-        </SafeAreaView>
+        </View>
       </Modal>
     </>
   );
@@ -314,7 +324,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8F5EC",
     paddingLeft: 30,
     paddingRight: 30,
-    paddingTop: 10,
   },
   h2: {
     fontSize: RFValue(14),

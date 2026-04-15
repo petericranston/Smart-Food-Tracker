@@ -67,4 +67,20 @@ async function getUserByUsername(username) {
   }
 }
 
-module.exports = { newUser, addIngredients, getUserByUsername, getIngredients };
+async function checkUser(username, password) {
+  //Checking if user exists
+  //Finding user
+  const user = await userData.findOne({
+    Username: username,
+    Password: password,
+  });
+  return user;
+}
+
+module.exports = {
+  newUser,
+  addIngredients,
+  getUserByUsername,
+  getIngredients,
+  checkUser,
+};

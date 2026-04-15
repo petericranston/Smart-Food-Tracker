@@ -27,6 +27,31 @@ app.get("/api/data", async (request, response) => {
   response.json({ message: "hello" });
 });
 
+app.post("/api/register", async (request, response) => {
+  const { username, password } = request.body;
+  const user = await database.newUser(username, password, []); // empty array for ingredients
+
+  if (!user)
+    return response.status(500).json({ error: "Failed to create user" });
+
+  response.json({ success: true });
+});
+
+app.post("/api/login", async (request, response) => {
+  //Login functionality
+  const user = await database.checkUser(
+    request.body.username,
+    request.body.password,
+  );
+  console.log(user);
+
+  if (user) {
+    response.json({ success: true, username: user.Username });
+  } else {
+    console.log("Login Failed");
+  }
+});
+
 app.post("/api/searchProduct", async (request, response) => {
   const search = request.body.searchQuery;
   console.log(search);
