@@ -94,7 +94,7 @@ export default function AddItems() {
                     keyExtractor={(item) => item.id.toString()}
                     ListEmptyComponent={
                     <Text style={{ textAlign: "center", fontSize: RFValue(14) }}>
-                        Added items will show here! -work
+                        Added items will show here!
                     </Text>
                     }
                     renderItem={({ item }) => {
