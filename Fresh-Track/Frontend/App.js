@@ -1,5 +1,4 @@
-import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useState, useEffect } from "react";
 import {
   useFonts,
@@ -24,7 +23,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Home from "./pages/Home";
 import Recipes from "./pages/Recipes";
 import AddItems from "./pages/AddItems";
-// import pages
+
 
 export default function App() {
   const API_URL = "http://192.168.0.229:3001";
@@ -57,52 +56,54 @@ export default function App() {
   if (!fontsLoaded) return null;
 
   return (
-    <NavigationContainer>
-      <NavTab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ color, size }) => {
-            if (route.name === "HomePage") {
-              return <Feather name="home" size={26} />;
-            } else if (route.name === "AddItemsPage") {
-              return <Entypo name="circle-with-plus" size={30} color="green" />;
-            } else if (route.name === "RecipesPage") {
-              return <AntDesign name="book" size={26} />;
-            } else {
-              // fallback icon incase of failure
-              iconName = "circle";
-            }
-          },
-          tabBarStyle: {
-            overflow: "visible",
-            backgroundColor: "#F8F5EC",
-            paddingTop: 10,
-            paddingRight: 10,
-          },
-          tabBarIconStyle: {
-            overflow: "visible",
-          },
-          headerShown: false,
-        })}
-      >
-        <NavTab.Screen
-          name="HomePage"
-          component={Home}
-          options={{ tabBarLabel: "Home", tabBarIconStyle: { marginTop: 5 } }}
-        />
-        <NavTab.Screen
-          name="AddItemsPage"
-          component={AddItems}
-          options={{ tabBarLabel: "" }}
-        />
-        <NavTab.Screen
-          name="RecipesPage"
-          component={Recipes}
-          options={{
-            tabBarLabel: "Recipes",
-            tabBarIconStyle: { marginTop: 5 },
-          }}
-        />
-      </NavTab.Navigator>
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <NavTab.Navigator
+          screenOptions={({ route }) => ({
+            tabBarIcon: ({ color, size }) => {
+              if (route.name === "HomePage") {
+                return <Feather name="home" size={26} />;
+              } else if (route.name === "AddItemsPage") {
+                return <Entypo name="circle-with-plus" size={30} color="green" />;
+              } else if (route.name === "RecipesPage") {
+                return <AntDesign name="book" size={26} />;
+              } else {
+                // fallback icon incase of failure
+                iconName = "circle";
+              }
+            },
+            tabBarStyle: {
+              overflow: "visible",
+              backgroundColor: "#F8F5EC",
+              paddingTop: 10,
+              paddingRight: 10,
+            },
+            tabBarIconStyle: {
+              overflow: "visible",
+            },
+            headerShown: false,
+          })}
+        >
+          <NavTab.Screen
+            name="HomePage"
+            component={Home}
+            options={{ tabBarLabel: "Home", tabBarIconStyle: { marginTop: 5 } }}
+          />
+          <NavTab.Screen
+            name="AddItemsPage"
+            component={AddItems}
+            options={{ tabBarLabel: "" }}
+          />
+          <NavTab.Screen
+            name="RecipesPage"
+            component={Recipes}
+            options={{
+              tabBarLabel: "Recipes",
+              tabBarIconStyle: { marginTop: 5 },
+            }}
+          />
+        </NavTab.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
