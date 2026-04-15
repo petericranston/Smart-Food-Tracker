@@ -4,6 +4,7 @@ const { Schema, model } = mongoose;
 
 const ingredientSchema = new Schema({
   //Making database document layout
+  IngredientName: String,
   ExpiryDate: Date,
 });
 
