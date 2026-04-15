@@ -1,4 +1,4 @@
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useState, useEffect } from "react";
 import {
   useFonts,
@@ -24,9 +24,8 @@ import Home from "./pages/Home";
 import Recipes from "./pages/Recipes";
 import AddItems from "./pages/AddItems";
 
-
 export default function App() {
-  const API_URL = "http://192.168.0.229:3001";
+  const API_URL = "http://localhost:3001";
   const [data, setData] = useState(null);
 
   useEffect(() => {
@@ -64,7 +63,9 @@ export default function App() {
               if (route.name === "HomePage") {
                 return <Feather name="home" size={26} />;
               } else if (route.name === "AddItemsPage") {
-                return <Entypo name="circle-with-plus" size={30} color="green" />;
+                return (
+                  <Entypo name="circle-with-plus" size={30} color="green" />
+                );
               } else if (route.name === "RecipesPage") {
                 return <AntDesign name="book" size={26} />;
               } else {

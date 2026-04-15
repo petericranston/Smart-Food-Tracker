@@ -1,198 +1,523 @@
-import { Text, StyleSheet, View, TextInput, ScrollView, TouchableOpacity, Modal } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { RFValue } from 'react-native-responsive-fontsize';
+import {
+  Text,
+  StyleSheet,
+  View,
+  TextInput,
+  ScrollView,
+  TouchableOpacity,
+  Modal,
+  Image,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { RFValue } from "react-native-responsive-fontsize";
 import ItemInput from "../components/ItemInput";
-import Ionicons from '@expo/vector-icons/Ionicons';
-import Feather from '@expo/vector-icons/Feather';
+import Ionicons from "@expo/vector-icons/Ionicons";
+import Feather from "@expo/vector-icons/Feather";
 import { useState } from "react";
 import ReceiptScanner from "../components/ReceiptScanner";
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+export default function AddItems() {
+  const API_URL = "http://localhost:3001";
 
-export default function AddItems(){
-    const insets = useSafeAreaInsets();
+  const insets = useSafeAreaInsets();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResponse, setSearchResponse] = useState(null);
 
-    const [scannedItems, setScannedItems] = useState([]);
+  const [scannedItems, setScannedItems] = useState([]);
 
-    const formatExpiry = (expiryDate) => {
-        if (!expiryDate) return "-/-";
-        const date = new Date(expiryDate);
-        const now = new Date();
+  const formatExpiry = (expiryDate) => {
+    if (!expiryDate) return "-/-";
+    const date = new Date(expiryDate);
+    const now = new Date();
 
-        // show full date if it's more than a year away
-        const oneYearFromNow = new Date();
-        oneYearFromNow.setFullYear(now.getFullYear() + 1);
+    // show full date if it's more than a year away
+    const oneYearFromNow = new Date();
+    oneYearFromNow.setFullYear(now.getFullYear() + 1);
 
-        if (date > oneYearFromNow) {
-            return date.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
-        }
+    if (date > oneYearFromNow) {
+      return date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+    }
 
-        return date.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit" });
-    };
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+    });
+  };
 
-    // Modal visibles
-    const [receiptVisible, setReceiptVisible] = useState(false);
-    const [barcodeVisible, setBarcodeVisible] = useState(false);
-    const [searchVisible, setSearchVisible] = useState(false);
+  async function searchProduct() {
+    try {
+      const response = await fetch(`${API_URL}/api/searchProduct`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ searchQuery }),
+      });
+      if (!response.ok) return;
+      const returnedProducts = await response.json();
+      const filtered = returnedProducts.filter(
+        (item) =>
+          item.name &&
+          item.name.length > 2 &&
+          item.image && // optional but good for UI
+          !item.name.toLowerCase().includes("unknown"),
+      );
+      setSearchResponse(filtered);
+    } catch (error) {
+      console.log("Failed to search for product", error);
+    }
+    setSearchQuery("");
+  }
 
-    return(
-        <>
-            <SafeAreaView style={styles.container}>
-                <Text style={styles.h1} >Add items</Text>
-                <Text style={styles.h2} >Choose how to add your food</Text>
+  async function saveIngredient(ingredientName) {
+    try {
+      const savedUsername = await AsyncStorage.getItem("username");
+      if (!savedUsername) {
+        console.log("No user logged in");
+        return;
+      }
+      const response = await fetch(`${API_URL}/api/addIngredient`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: savedUsername,
+          ingredient: { IngredientName: ingredientName },
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) return;
+      console.log("Ingredient saved!", data);
+    } catch (error) {
+      console.log("Error saving ingredient", error);
+    }
+  }
 
-                <View style={{alignItems: "center", marginTop: 15}}>
-                    <View style={{ flexDirection: "row", gap: 20, marginBottom: 23}}>
-                        <ItemInput inputChoice={"Scan receipt"} onPressFunction={() => setReceiptVisible(true)}>
-                            <Ionicons name="receipt-outline" color="white" size={40}/>
-                        </ItemInput>
-                        <ItemInput inputChoice={"Scan barcode"} onPressFunction={() => setBarcodeVisible(true)}>
-                            <Ionicons name="barcode-outline" size={40} color="white" />
-                        </ItemInput>
-                    </View>
-                    
-                    <ItemInput inputChoice={"Search item"} onPressFunction={() => setSearchVisible(true)}>
-                        <Feather name="search" size={40} color="white" />
-                    </ItemInput>
+  // Modal visibles
+  const [receiptVisible, setReceiptVisible] = useState(false);
+  const [barcodeVisible, setBarcodeVisible] = useState(false);
+  const [searchVisible, setSearchVisible] = useState(false);
+
+  return (
+    <>
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.h1}>Add items</Text>
+        <Text style={styles.h2}>Choose how to add your food</Text>
+
+        <View style={{ alignItems: "center", marginTop: 15 }}>
+          <View style={{ flexDirection: "row", gap: 20, marginBottom: 23 }}>
+            <ItemInput
+              inputChoice={"Scan receipt"}
+              onPressFunction={() => setReceiptVisible(true)}
+            >
+              <Ionicons name="receipt-outline" color="white" size={40} />
+            </ItemInput>
+            <ItemInput
+              inputChoice={"Scan barcode"}
+              onPressFunction={() => setBarcodeVisible(true)}
+            >
+              <Ionicons name="barcode-outline" size={40} color="white" />
+            </ItemInput>
+          </View>
+
+          <ItemInput
+            inputChoice={"Search item"}
+            onPressFunction={() => setSearchVisible(true)}
+          >
+            <Feather name="search" size={40} color="white" />
+          </ItemInput>
+        </View>
+
+        {/* line */}
+        <View
+          style={{
+            height: 1,
+            backgroundColor: "#B5B5B549",
+            marginTop: 25,
+            // iOS
+            shadowColor: "#000000",
+            shadowOffset: { width: 2, height: 2 },
+            shadowOpacity: 0.8,
+            shadowRadius: 4,
+
+            // Android
+            elevation: 4,
+          }}
+        />
+
+        <View
+          style={{
+            marginTop: 25,
+            padding: 15,
+            borderColor: "#B5B5B550",
+            borderWidth: 2,
+          }}
+        >
+          {scannedItems.length > 0 ? (
+            scannedItems.map((item) => {
+              const displayUnit = item.unit
+                ? `${item.quantity} x ${item.unit}`
+                : `${item.quantity} x`;
+
+              return (
+                <View style={styles.itemsRow} key={item.id}>
+                  <Text style={{ fontSize: RFValue(14) }}>
+                    {displayUnit} {item.name}
+                  </Text>
+                  <Text style={{ color: "#888", fontSize: RFValue(14) }}>
+                    {formatExpiry(item.expiryDate)}
+                  </Text>
                 </View>
+              );
+            })
+          ) : (
+            <Text style={{ textAlign: "center", fontSize: RFValue(14) }}>
+              Added items will show here!
+            </Text>
+          )}
+        </View>
+      </SafeAreaView>
 
-                {/* line */}
-                <View style={{ 
-                    height: 1, 
-                    backgroundColor: '#B5B5B549', 
-                    marginTop: 25,
-                    // iOS
-                    shadowColor: '#000000',
-                    shadowOffset: { width: 2, height: 2 },
-                    shadowOpacity: 0.8,
-                    shadowRadius: 4,
+      {/* ---------Modals--------- */}
+      {/* Receipt modal */}
+      <Modal
+        visible={receiptVisible}
+        transparent={false}
+        statusBarTranslucent={true}
+        animationType="slide"
+        onRequestClose={() => setReceiptVisible(false)} // Android back button
+      >
+        <SafeAreaView
+          style={[styles.modalContainer, { paddingTop: insets.top + 15 }]}
+        >
+          <TouchableOpacity
+            onPress={() => setReceiptVisible(false)}
+            style={{ alignSelf: "flex-end" }}
+          >
+            <Text style={{ fontSize: 24 }}>✕</Text>
+          </TouchableOpacity>
+          <ReceiptScanner
+            onScanComplete={(data) => {
+              const mapped = data.products.map((product, index) => ({
+                id: index + 1,
+                name: product.product_name,
+                expiryDate: product.product_expiration_date
+                  ? product.product_expiration_date
+                      .split("-")
+                      .reverse()
+                      .join("-") // converts DD-MM-YYYY to YYYY-MM-DD
+                  : null,
+                foodGroup: product.food_group,
+                storageState: product.storage_state,
+              }));
+              setScannedItems(mapped);
+              setReceiptVisible(false); // close modal after scan
+            }}
+          />
+        </SafeAreaView>
+      </Modal>
 
-                    // Android
-                    elevation: 4,
-                }} />
+      {/* Barcode modal */}
+      <Modal
+        visible={barcodeVisible}
+        transparent={false}
+        animationType="slide"
+        onRequestClose={() => setBarcodeVisible(false)} // Android back button
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <TouchableOpacity
+            onPress={() => setBarcodeVisible(false)}
+            style={{ alignSelf: "flex-end" }}
+          >
+            <Text style={{ fontSize: 24 }}>✕</Text>
+          </TouchableOpacity>
+          <Text>Barcode</Text>
+        </SafeAreaView>
+      </Modal>
 
-                <View style={{ marginTop: 25, padding: 15, borderColor: "#B5B5B550", borderWidth: 2}}>
-                    {scannedItems.length > 0 ? (
-                        scannedItems.map((item) => {
-                            const displayUnit = item.unit ? `${item.quantity} x ${item.unit}` : `${item.quantity} x`;
-
-                            return (
-                                <View style={styles.itemsRow} key={item.id}>
-                                    <Text style={{ fontSize: RFValue(14) }}>{displayUnit} {item.name}</Text>
-                                    <Text style={{ color: "#888", fontSize: RFValue(14) }}>{formatExpiry(item.expiryDate)}</Text>
-                                </View>
-                            );
-                        })
-                    ):(
-                        <Text style={{ textAlign: "center", fontSize: RFValue(14)}}>Added items will show here!</Text>
+      {/* Search modal */}
+      <Modal
+        visible={searchVisible}
+        transparent={false}
+        animationType="slide"
+        onRequestClose={() => setSearchVisible(false)} // Android back button
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <TouchableOpacity
+            onPress={() => setSearchVisible(false)}
+            style={{ alignSelf: "flex-end" }}
+          >
+            <Text style={{ fontSize: 24 }}>✕</Text>
+          </TouchableOpacity>
+          <View style={styles.searchRow}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search for an ingredient..."
+              placeholderTextColor="#666"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            <TouchableOpacity style={styles.searchBtn} onPress={searchProduct}>
+              <Text style={styles.searchBtnText}>Search</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView
+            style={styles.results}
+            contentContainerStyle={{ paddingBottom: 30 }}
+            showsVerticalScrollIndicator={false}
+          >
+            {searchResponse &&
+              searchResponse.map((item, index) => (
+                <View key={index} style={styles.resultCard}>
+                  <View style={styles.resultRow}>
+                    {item.image && (
+                      <Image
+                        source={{ uri: item.image }}
+                        style={styles.productImage}
+                      />
                     )}
+                    <View style={styles.productInfo}>
+                      <Text style={styles.productName}>{item.name}</Text>
+                      {item.brand && (
+                        <Text style={styles.productBrand}>{item.brand}</Text>
+                      )}
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.saveBtn}
+                    onPress={() => saveIngredient(item.name)}
+                  >
+                    <Text style={styles.saveBtnText}>+ Add to Pantry</Text>
+                  </TouchableOpacity>
                 </View>
-
-            </SafeAreaView>
-
-        {/* ---------Modals--------- */}
-            {/* Receipt modal */}
-            <Modal
-                visible={receiptVisible}
-                transparent={false}
-                statusBarTranslucent={true}
-                animationType="slide"
-                onRequestClose={() => setReceiptVisible(false)}  // Android back button
-            >
-                <SafeAreaView style={[styles.modalContainer, { paddingTop: insets.top + 15}]}>
-                    <TouchableOpacity 
-                        onPress={() => setReceiptVisible(false)}
-                        style={{ alignSelf: 'flex-end' }}
-                    >
-                        <Text style={{ fontSize: 24 }}>✕</Text>
-                    </TouchableOpacity>
-                    <ReceiptScanner onScanComplete={(data) => {
-                        const mapped = data.products.map((product, index) => ({
-                            id: index + 1,
-                            name: product.product_name,
-                            expiryDate: product.product_expiration_date 
-                                ? product.product_expiration_date.split('-').reverse().join('-') // converts DD-MM-YYYY to YYYY-MM-DD
-                                : null,
-                            foodGroup: product.food_group,
-                            storageState: product.storage_state,
-                        }));
-                        setScannedItems(mapped);
-                        setReceiptVisible(false); // close modal after scan
-                    }} />
-                </SafeAreaView>
-            </Modal>
-
-            {/* Barcode modal */}
-            <Modal
-                visible={barcodeVisible}
-                transparent={false}
-                animationType="slide"
-                onRequestClose={() => setBarcodeVisible(false)}  // Android back button
-            >
-                <SafeAreaView style={styles.modalContainer}>
-                    <TouchableOpacity 
-                        onPress={() => setBarcodeVisible(false)}
-                        style={{ alignSelf: 'flex-end' }}
-                    >
-                        <Text style={{ fontSize: 24 }}>✕</Text>
-                    </TouchableOpacity>
-                    <Text>Barcode</Text>
-                </SafeAreaView>
-            </Modal>
-
-            {/* Search modal */}
-            <Modal
-                visible={searchVisible}
-                transparent={false}
-                animationType="slide"
-                onRequestClose={() => setSearchVisible(false)}  // Android back button
-            >
-                <SafeAreaView style={styles.modalContainer}>
-                    <TouchableOpacity 
-                        onPress={() => setSearchVisible(false)}
-                        style={{ alignSelf: 'flex-end' }}
-                    >
-                        <Text style={{ fontSize: 24 }}>✕</Text>
-                    </TouchableOpacity>
-                    <Text>Search</Text>
-                </SafeAreaView>
-            </Modal>
-        </>
-    )
+              ))}
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
+    </>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#F8F5EC",
-        paddingTop: 20,
-        paddingLeft: 25,
-        paddingRight: 25
-    },
-    // this is because the modal kept bugging and would have a broken view
-    modalContainer: {
-        flex: 1,
-        backgroundColor: "#F8F5EC",
-        paddingLeft: 30,
-        paddingRight: 30
-    },
-    h2: {
-        fontSize: RFValue(14),
-        color: "#707070",
-        fontFamily: 'Inter_500Medium',
-        marginBottom: 20,
-        textAlign: "center"
-    },
-    h1: {
-        fontSize: RFValue(24),
-        fontFamily: 'Inter_600SemiBold',
-        textAlign: "center",
-        marginBottom: 5
-    },
-    itemsRow: {
-        flexDirection: "row", 
-        justifyContent: "space-between", 
-        alignItems: "center", 
-        paddingVertical: 6,
-    }
-})
+  container: {
+    flex: 1,
+    backgroundColor: "#F8F5EC",
+    paddingTop: 20,
+    paddingLeft: 25,
+    paddingRight: 25,
+  },
+  // this is because the modal kept bugging and would have a broken view
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "#F8F5EC",
+    paddingLeft: 30,
+    paddingRight: 30,
+    paddingTop: 10,
+  },
+  h2: {
+    fontSize: RFValue(14),
+    color: "#707070",
+    fontFamily: "Inter_500Medium",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  h1: {
+    fontSize: RFValue(24),
+    fontFamily: "Inter_600SemiBold",
+    textAlign: "center",
+    marginBottom: 5,
+  },
+  itemsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 6,
+  },
+  safe: {
+    flex: 1,
+    backgroundColor: "#0f1117",
+  },
+
+  appTitle: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#ffffff",
+    letterSpacing: -0.5,
+  },
+
+  userGreeting: {
+    fontSize: 13,
+    color: "#6b7280",
+    marginTop: 2,
+  },
+
+  logoutBtn: {
+    backgroundColor: "#2a1a1a",
+    borderWidth: 1,
+    borderColor: "#ff4444",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+
+  logoutText: {
+    color: "#ff4444",
+    fontWeight: "600",
+    fontSize: 13,
+  },
+
+  registerBtn: {
+    backgroundColor: "#4ade80",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+
+  registerBtnText: {
+    color: "#0f1117",
+    fontWeight: "700",
+    fontSize: 13,
+  },
+
+  card: {
+    margin: 16,
+    backgroundColor: "#1a1d27",
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "#2a2d3a",
+  },
+
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#ffffff",
+    marginBottom: 16,
+  },
+
+  input: {
+    backgroundColor: "#0f1117",
+    borderWidth: 1,
+    borderColor: "#2a2d3a",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    color: "#ffffff",
+    marginBottom: 12,
+    fontSize: 15,
+  },
+
+  primaryBtn: {
+    backgroundColor: "#4ade80",
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+
+  primaryBtnText: {
+    color: "#0f1117",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+
+  cancelText: {
+    textAlign: "center",
+    color: "#6b7280",
+    fontSize: 14,
+  },
+
+  searchRow: {
+    flexDirection: "row",
+    marginHorizontal: 16,
+    marginVertical: 16,
+    alignItems: "center",
+  },
+
+  searchInput: {
+    flex: 1,
+    backgroundColor: "#1a1d27",
+    borderWidth: 1,
+    borderColor: "#2a2d3a",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    color: "#ffffff",
+    fontSize: 15,
+    marginRight: 10, // replaces gap
+  },
+
+  searchBtn: {
+    backgroundColor: "#4ade80",
+    borderRadius: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  searchBtnText: {
+    color: "#0f1117",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+
+  results: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+
+  resultCard: {
+    backgroundColor: "#1a1d27",
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#2a2d3a",
+  },
+
+  resultRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+
+  productImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 10,
+    marginRight: 12,
+    backgroundColor: "#0f1117",
+  },
+
+  productInfo: {
+    flex: 1,
+  },
+
+  productName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#ffffff",
+    marginBottom: 4,
+  },
+
+  productBrand: {
+    fontSize: 13,
+    color: "#6b7280",
+  },
+
+  saveBtn: {
+    backgroundColor: "#16a34a",
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+
+  saveBtnText: {
+    color: "#ffffff",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+});
