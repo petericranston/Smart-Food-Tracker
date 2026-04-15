@@ -114,89 +114,87 @@ export default function AddItems() {
             </View>
         </SafeAreaView>
 
-      {/* ---------Modals--------- */}
-      {/* Receipt modal */}
-      <Modal
-        visible={receiptVisible}
-        transparent={false}
-        statusBarTranslucent={true}
-        animationType="slide"
-        onRequestClose={() => setReceiptVisible(false)} // Android back button
-      >
-        <SafeAreaView
-          style={[styles.modalContainer, { paddingTop: insets.top + 15 }]}
+        {/* ---------Modals--------- */}
+        {/* Receipt modal */}
+        <Modal
+            visible={receiptVisible}
+            transparent={false}
+            statusBarTranslucent={true}
+            animationType="slide"
+            onRequestClose={() => setReceiptVisible(false)} // Android back button
         >
-          <TouchableOpacity
-            onPress={() => setReceiptVisible(false)}
-            style={{ alignSelf: "flex-end" }}
-          >
-            <Text style={{ fontSize: 24 }}>✕</Text>
-          </TouchableOpacity>
-          <ReceiptScanner
-            onScanComplete={(data) => {
-              const mapped = data.products.map((product, index) => ({
-                id: index + 1,
-                name: product.product_name,
-                expiryDate: product.product_expiration_date
-                  ? product.product_expiration_date
-                      .split("-")
-                      .reverse()
-                      .join("-") // converts DD-MM-YYYY to YYYY-MM-DD
-                  : null,
-                foodGroup: product.food_group,
-                storageState: product.storage_state,
-              }));
-              setScannedItems(mapped);
-              setReceiptVisible(false); // close modal after scan
-            }}
-          />
-        </SafeAreaView>
-      </Modal>
-
-      {/* Barcode modal */}
-      <Modal
-        visible={barcodeVisible}
-        transparent={false}
-        animationType="slide"
-        onRequestClose={() => setBarcodeVisible(false)} // Android back button
-      >
-        <SafeAreaView style={styles.modalContainer}>
-          <TouchableOpacity
-            onPress={() => setBarcodeVisible(false)}
-            style={{ alignSelf: "flex-end" }}
-          >
-            <Text style={{ fontSize: 24 }}>✕</Text>
-          </TouchableOpacity>
-          <Text>Barcode</Text>
-        </SafeAreaView>
-      </Modal>
-
-                <View style={{ marginTop: 25, padding: 15, borderColor: "#B5B5B550", borderWidth: 2, maxHeight: 300, minHeight: 50}}>
-                   <FlatList
-                        data={scannedItems}
-                        keyExtractor={(item) => item.id.toString()}
-                        ListEmptyComponent={
-                        <Text style={{ textAlign: "center", fontSize: RFValue(14) }}>
-                            Added items will show here! -work
-                        </Text>
-                        }
-                        renderItem={({ item }) => {
-                            const displayUnit = item.unit ? `${item.quantity} x ${item.unit}` : `${item.quantity} x`;
-                            return (
-                                <View style={styles.itemsRow}>
-                                <Text numberOfLines={3} style={{ fontSize: RFValue(14), width: "70%" }}>
-                                    {displayUnit} {item.name}
-                                </Text>
-                                <Text style={{ color: "#888", fontSize: RFValue(14) }}>
-                                    {formatExpiry(item.expiryDate)}
-                                </Text>
-                                </View>
-                            );
-                        }}
-                    />
-                </View>
-
+            <SafeAreaView
+            style={[styles.modalContainer, { paddingTop: insets.top + 15 }]}
+            >
+                <TouchableOpacity
+                    onPress={() => setReceiptVisible(false)}
+                    style={{ alignSelf: "flex-end" }}
+                >
+                    <Text style={{ fontSize: 24 }}>✕</Text>
+                </TouchableOpacity>
+                <ReceiptScanner
+                    onScanComplete={(data) => {
+                    const mapped = data.products.map((product, index) => ({
+                        id: index + 1,
+                        name: product.product_name,
+                        expiryDate: product.product_expiration_date
+                        ? product.product_expiration_date
+                            .split("-")
+                            .reverse()
+                            .join("-") // converts DD-MM-YYYY to YYYY-MM-DD
+                        : null,
+                        foodGroup: product.food_group,
+                        storageState: product.storage_state,
+                    }));
+                    setScannedItems(mapped);
+                    setReceiptVisible(false); // close modal after scan
+                    }}
+                />
             </SafeAreaView>
+        </Modal>
+
+        {/* Barcode modal */}
+        <Modal
+            visible={barcodeVisible}
+            transparent={false}
+            animationType="slide"
+            onRequestClose={() => setBarcodeVisible(false)} // Android back button
+        >
+            <SafeAreaView style={styles.modalContainer}>
+            <TouchableOpacity
+                onPress={() => setBarcodeVisible(false)}
+                style={{ alignSelf: "flex-end" }}
+            >
+                <Text style={{ fontSize: 24 }}>✕</Text>
+            </TouchableOpacity>
+            <Text>Barcode</Text>
+            </SafeAreaView>
+        </Modal>
+
+            <View style={{ marginTop: 25, padding: 15, borderColor: "#B5B5B550", borderWidth: 2, maxHeight: 300, minHeight: 50}}>
+                <FlatList
+                    data={scannedItems}
+                    keyExtractor={(item) => item.id.toString()}
+                    ListEmptyComponent={
+                    <Text style={{ textAlign: "center", fontSize: RFValue(14) }}>
+                        Added items will show here! -work
+                    </Text>
+                    }
+                    renderItem={({ item }) => {
+                        const displayUnit = item.unit ? `${item.quantity} x ${item.unit}` : `${item.quantity} x`;
+                        return (
+                            <View style={styles.itemsRow}>
+                            <Text numberOfLines={3} style={{ fontSize: RFValue(14), width: "70%" }}>
+                                {displayUnit} {item.name}
+                            </Text>
+                            <Text style={{ color: "#888", fontSize: RFValue(14) }}>
+                                {formatExpiry(item.expiryDate)}
+                            </Text>
+                            </View>
+                        );
+                    }}
+                />
+            </View>
 
         {/* ---------Modals--------- */}
             {/* Receipt modal */}
