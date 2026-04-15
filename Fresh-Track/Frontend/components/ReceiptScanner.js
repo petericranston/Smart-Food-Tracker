@@ -1,55 +1,55 @@
 // Aidan's code that he sent me that I am editing to work within our project and my front end
-import * as ImagePicker from 'expo-image-picker';
-import OpenAI from 'openai';
-import { useState } from 'react';
+import * as ImagePicker from "expo-image-picker";
+import OpenAI from "openai";
+import { useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
-    StyleSheet
-} from 'react-native';
+  ActivityIndicator,
+  Alert,
+  Image,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+  StyleSheet,
+} from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 
 const openai = new OpenAI({
-    apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
-    dangerouslyAllowBrowser: true,
+  apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
+  dangerouslyAllowBrowser: true,
 });
 
 export default function ReceiptScanner({ onScanComplete }) {
-    const [image, setImage] = useState(null);
-    const [receipt, setReceipt] = useState(null);
-    const [loading, setLoading] = useState(false);
+  const [image, setImage] = useState(null);
+  const [receipt, setReceipt] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-    function formatDateDDMMYYYY(date = new Date()) {
-        const dd = String(date.getDate()).padStart(2, '0');
-        const mm = String(date.getMonth() + 1).padStart(2, '0');
-        const yyyy = date.getFullYear();
-        return `${dd}-${mm}-${yyyy}`;
+  function formatDateDDMMYYYY(date = new Date()) {
+    const dd = String(date.getDate()).padStart(2, "0");
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const yyyy = date.getFullYear();
+    return `${dd}-${mm}-${yyyy}`;
+  }
+
+  function getMimeType(uri = "") {
+    const lower = uri.toLowerCase();
+    if (lower.endsWith(".png")) return "image/png";
+    if (lower.endsWith(".webp")) return "image/webp";
+    return "image/jpeg";
+  }
+
+  function safeParseJson(text) {
+    try {
+      return JSON.parse(text);
+    } catch {
+      const cleaned = text.replace(/```json|```/g, "").trim();
+      return JSON.parse(cleaned);
     }
+  }
 
-    function getMimeType(uri = '') {
-        const lower = uri.toLowerCase();
-        if (lower.endsWith('.png')) return 'image/png';
-        if (lower.endsWith('.webp')) return 'image/webp';
-        return 'image/jpeg';
-    }
+  const currentDate = formatDateDDMMYYYY();
 
-    function safeParseJson(text) {
-        try {
-            return JSON.parse(text);
-        } catch {
-            const cleaned = text.replace(/```json|```/g, '').trim();
-            return JSON.parse(cleaned);
-        }
-    }
-
-    const currentDate = formatDateDDMMYYYY();
-
-    const PROMPT = `You are a deterministic receipt extraction engine.
+  const PROMPT = `You are a deterministic receipt extraction engine.
 
   Task:
   Read one receipt image and return ONLY one valid JSON object matching the exact schema below.
@@ -201,142 +201,147 @@ export default function ReceiptScanner({ onScanComplete }) {
     ]
   }`;
 
-    const handleTakePhoto = async () => {
-        const { granted } = await ImagePicker.requestCameraPermissionsAsync();
+  const handleTakePhoto = async () => {
+    const { granted } = await ImagePicker.requestCameraPermissionsAsync();
 
-        if (!granted) {
-            Alert.alert('Permission required', 'Camera access is needed to scan receipts.');
-            return;
-        }
+    if (!granted) {
+      Alert.alert(
+        "Permission required",
+        "Camera access is needed to scan receipts.",
+      );
+      return;
+    }
 
-        const result = await ImagePicker.launchCameraAsync({
-            base64: true,
-            quality: 0.7,
-        });
+    const result = await ImagePicker.launchCameraAsync({
+      base64: true,
+      quality: 0.7,
+    });
 
-        if (!result.canceled) {
-            setImage(result.assets[0]);
-            setReceipt(null);
-        }
-    };
+    if (!result.canceled) {
+      setImage(result.assets[0]);
+      setReceipt(null);
+    }
+  };
 
-    const handleScanReceipt = async () => {
-        if (!image || !image.base64) return;
+  const handleScanReceipt = async () => {
+    if (!image || !image.base64) return;
 
-        setLoading(true);
-        setReceipt(null);
+    setLoading(true);
+    setReceipt(null);
 
-        try {
-            const mimeType = getMimeType(image.uri);
+    try {
+      const mimeType = getMimeType(image.uri);
 
-            const result = await openai.chat.completions.create({
-                model: 'gpt-4o',
-                temperature: 0,
-                max_tokens: 1000,
-                messages: [
-                    {
-                        role: 'user',
-                        content: [
-                            {
-                                type: 'image_url',
-                                image_url: {
-                                    url: `data:${mimeType};base64,${image.base64}`,
-                                    detail: 'high',
-                                },
-                            },
-                            {
-                                type: 'text',
-                                text: PROMPT,
-                            },
-                        ],
-                    },
-                ],
-            });
+      const result = await openai.chat.completions.create({
+        model: "gpt-4o",
+        temperature: 0,
+        max_tokens: 1000,
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "image_url",
+                image_url: {
+                  url: `data:${mimeType};base64,${image.base64}`,
+                  detail: "high",
+                },
+              },
+              {
+                type: "text",
+                text: PROMPT,
+              },
+            ],
+          },
+        ],
+      });
 
-            const text = result.choices[0]?.message?.content ?? '';
-            const parsed = safeParseJson(String(text));
-            setReceipt(parsed);
-            onScanComplete(parsed); // sending data to the display in AddItems.js
-        } catch (err) {
-            Alert.alert('Error', 'Could not scan receipt. Try a clearer photo.');
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
+      const text = result.choices[0]?.message?.content ?? "";
+      const parsed = safeParseJson(String(text));
+      setReceipt(parsed);
+      onScanComplete(parsed); // sending data to the display in AddItems.js
+    } catch (err) {
+      Alert.alert("Error", "Could not scan receipt. Try a clearer photo.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.title}>Receipt Scanner</Text>
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Receipt Scanner</Text>
 
-            <TouchableOpacity style={styles.uploadArea} onPress={handleTakePhoto}>
-                {image ? (
-                    <Image source={{ uri: image.uri }} style={styles.preview} />
-                ) : (
-                    <View style={styles.placeholder}>
-                        <Text style={styles.cameraIcon}>📷</Text>
-                        <Text style={styles.placeholderText}>Tap to take a photo of your receipt</Text>
-                    </View>
-                )}
-            </TouchableOpacity>
+      <TouchableOpacity style={styles.uploadArea} onPress={handleTakePhoto}>
+        {image ? (
+          <Image source={{ uri: image.uri }} style={styles.preview} />
+        ) : (
+          <View style={styles.placeholder}>
+            <Text style={styles.cameraIcon}>📷</Text>
+            <Text style={styles.placeholderText}>
+              Tap to take a photo of your receipt
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
 
-            {image && (
-                <TouchableOpacity
-                    style={[styles.btn, loading && styles.btnDisabled]}
-                    onPress={handleScanReceipt}
-                    disabled={loading}
-                >
-                    {loading ? (
-                        <ActivityIndicator color="#fff" />
-                    ) : (
-                        <Text style={styles.btnText}>Scan Receipt</Text>
-                    )}
-                </TouchableOpacity>
-            )}
+      {image && (
+        <TouchableOpacity
+          style={[styles.btn, loading && styles.btnDisabled]}
+          onPress={handleScanReceipt}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.btnText}>Scan Receipt</Text>
+          )}
+        </TouchableOpacity>
+      )}
 
-            {receipt && (
-                <View style={styles.jsonContainer}>
-                    <Text style={styles.jsonLabel}>RAW JSON RESPONSE</Text>
-                    <View style={styles.jsonBox}>
-                        <Text style={styles.jsonText}>
-                            {JSON.stringify(receipt, null, 2)}
-                        </Text>
-                    </View>
-                </View>
-            )}
-        </ScrollView>
-    );
+      {receipt && (
+        <View style={styles.jsonContainer}>
+          <Text style={styles.jsonLabel}>RAW JSON RESPONSE</Text>
+          <View style={styles.jsonBox}>
+            <Text style={styles.jsonText}>
+              {JSON.stringify(receipt, null, 2)}
+            </Text>
+          </View>
+        </View>
+      )}
+    </ScrollView>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    marginTop: 30
+    marginTop: 30,
   },
   title: {
     fontSize: RFValue(24),
-    fontFamily: 'Inter_600SemiBold',
+    fontFamily: "Inter_600SemiBold",
     marginBottom: 10,
   },
   uploadArea: {
     borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: '#bbb',
+    borderStyle: "dashed",
+    borderColor: "#bbb",
     borderRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 16,
-    backgroundColor: '#F8F5EC',
+    backgroundColor: "#F8F5EC",
     minHeight: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   preview: {
-    width: '100%',
+    width: "100%",
     height: 240,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   placeholder: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: 40,
   },
   cameraIcon: {
@@ -345,43 +350,43 @@ const styles = StyleSheet.create({
   },
   placeholderText: {
     fontSize: 14,
-    color: '#888',
-    textAlign: 'center',
+    color: "#888",
+    textAlign: "center",
   },
   btn: {
-    backgroundColor: '#111',
+    backgroundColor: "#111",
     padding: 16,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 20,
   },
   btnDisabled: {
-    backgroundColor: '#555',
+    backgroundColor: "#555",
   },
   btnText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   jsonContainer: {
     marginTop: 4,
   },
   jsonLabel: {
     fontSize: 11,
-    fontWeight: '600',
-    color: '#888',
+    fontWeight: "600",
+    color: "#888",
     letterSpacing: 0.8,
     marginBottom: 8,
   },
   jsonBox: {
-    backgroundColor: '#1e1e1e',
+    backgroundColor: "#1e1e1e",
     borderRadius: 12,
     padding: 16,
   },
   jsonText: {
-    fontFamily: 'monospace',
+    fontFamily: "monospace",
     fontSize: 12,
-    color: '#d4d4d4',
+    color: "#d4d4d4",
     lineHeight: 20,
   },
 });
