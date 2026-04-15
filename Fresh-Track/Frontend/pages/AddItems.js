@@ -88,36 +88,29 @@ export default function AddItems() {
             }}
             />
 
-            <View
-            style={{
-                marginTop: 25,
-                padding: 15,
-                borderColor: "#B5B5B550",
-                borderWidth: 2,
-            }}
-            >
-            {scannedItems.length > 0 ? (
-                scannedItems.map((item) => {
-                const displayUnit = item.unit
-                    ? `${item.quantity} x ${item.unit}`
-                    : `${item.quantity} x`;
-
-                return (
-                    <View style={styles.itemsRow} key={item.id}>
-                    <Text style={{ fontSize: RFValue(14) }}>
-                        {displayUnit} {item.name}
+            <View style={{ marginTop: 25, padding: 15, borderColor: "#B5B5B550", borderWidth: 2, maxHeight: 300, minHeight: 50}}>
+                <FlatList
+                    data={scannedItems}
+                    keyExtractor={(item) => item.id.toString()}
+                    ListEmptyComponent={
+                    <Text style={{ textAlign: "center", fontSize: RFValue(14) }}>
+                        Added items will show here! -work
                     </Text>
-                    <Text style={{ color: "#888", fontSize: RFValue(14) }}>
-                        {formatExpiry(item.expiryDate)}
-                    </Text>
-                    </View>
-                );
-                })
-            ) : (
-                <Text style={{ textAlign: "center", fontSize: RFValue(14) }}>
-                Added items will show here!
-                </Text>
-            )}
+                    }
+                    renderItem={({ item }) => {
+                        const displayUnit = item.unit ? `${item.quantity} x ${item.unit}` : `${item.quantity} x`;
+                        return (
+                            <View style={styles.itemsRow}>
+                            <Text numberOfLines={3} style={{ fontSize: RFValue(14), width: "70%" }}>
+                                {displayUnit} {item.name}
+                            </Text>
+                            <Text style={{ color: "#888", fontSize: RFValue(14) }}>
+                                {formatExpiry(item.expiryDate)}
+                            </Text>
+                            </View>
+                        );
+                    }}
+                />
             </View>
         </SafeAreaView>
 
