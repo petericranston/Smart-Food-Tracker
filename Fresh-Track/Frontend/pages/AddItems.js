@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Modal,
   Image,
-  FlatList
+  FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { RFValue } from "react-native-responsive-fontsize";
@@ -171,7 +171,9 @@ export default function AddItems() {
               </Text>
             }
             renderItem={({ item }) => {
-              const displayUnit = item.unit ? `${item.foodQuantity} x ${item.unit}` : `${item.foodQuantity} x`;
+              const displayUnit = item.unit
+                ? `${item.foodQuantity} x ${item.unit}`
+                : `${item.foodQuantity} x`;
               return (
                 <View style={styles.itemsRow}>
                   <Text
@@ -200,7 +202,9 @@ export default function AddItems() {
         animationType="slide"
         onRequestClose={() => setReceiptVisible(false)}
       >
-        <View style={[styles.modalContainer, { paddingTop: insets.top + 15 }]}> {/* insets stop the modal going to the top when first running 
+        <View style={[styles.modalContainer, { paddingTop: insets.top + 15 }]}>
+          {" "}
+          {/* insets stop the modal going to the top when first running 
         the app for some reason safearea view doesn't work properly */}
           <TouchableOpacity
             onPress={() => setReceiptVisible(false)}
@@ -221,7 +225,7 @@ export default function AddItems() {
                   : null,
                 foodGroup: product.food_group,
                 storageState: product.storage_state,
-                foodQuantity: product.number_of_products
+                foodQuantity: product.number_of_products,
               }));
               setScannedItems(mapped);
               setReceiptVisible(false);
