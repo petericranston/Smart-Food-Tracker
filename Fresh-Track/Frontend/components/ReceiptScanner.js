@@ -51,155 +51,152 @@ export default function ReceiptScanner({ onScanComplete }) {
 
   const PROMPT = `You are a deterministic receipt extraction engine.
 
-  Task:
-  Read one receipt image and return ONLY one valid JSON object matching the exact schema below.
+    Task:
+    Read one receipt image and return ONLY one valid JSON object matching the exact schema below.
 
-  Hard requirements:
-  - Output JSON only
-  - No markdown
-  - No explanations
-  - No extra text
-  - No extra keys
-  - If a value is missing, use null
-  - If uncertain whether an item is edible, exclude it unless it is likely food; if included under uncertainty, set "expiration_date_rating" to "red"
+    Hard requirements:
+    - Output JSON only
+    - No markdown
+    - No explanations
+    - No extra text
+    - No extra keys
+    - If a value is missing, use null
+    - If uncertain whether an item is edible, exclude it unless it is likely food; if included under uncertainty, set "expiration_date_rating" to "red"
 
-  Current date rules:
-  - currentDate = ${currentDate}
-  - "dateOfScan" must always equal "${currentDate}"
-  - If the receipt purchase date is visible, use it as "dateOfPurchase"
-  - If the receipt purchase date is not visible, use "${currentDate}" as fallback for "dateOfPurchase"
-  - Never invent any other date
+    Current date rules:
+    - currentDate = ${currentDate}
+    - "dateOfScan" must always equal "${currentDate}"
+    - If the receipt purchase date is visible, use it as "dateOfPurchase"
+    - If the receipt purchase date is not visible, use "${currentDate}" as fallback for "dateOfPurchase"
+    - Never invent any other date
 
-  Receipt reading rules:
-  - Read top to bottom in strict order
-  - Treat each visible line as separate initially
-  - Merge adjacent lines only when clearly part of the same product
-  - If a line has no price and the next line does, merge if they describe one product
-  - If a line is only a descriptor such as size, flavour, or pack size, attach it to the nearest matching product line
-  - Correct obvious OCR errors only when meaning is clear
-  - Ignore totals, discounts, loyalty lines, payment lines, coupons, bags, and non-food items
+    Receipt reading rules:
+    - Read top to bottom in strict order
+    - Treat each visible line as separate initially
+    - Merge adjacent lines only when clearly part of the same product
+    - If a line has no price and the next line does, merge if they describe one product
+    - If a line is only a descriptor such as size, flavour, or pack size, attach it to the nearest matching product line
+    - Correct obvious OCR errors only when meaning is clear
+    - Ignore totals, discounts, loyalty lines, payment lines, coupons, bags, and non-food items
 
-  Product rules:
-  - Extract edible grocery items only
-  - Keep product wording close to the receipt, but expand obvious abbreviations when meaning is clear
-  - Do NOT deduplicate products
-  - If the same product appears multiple times on separate lines, return separate entries
-  - If the receipt indicates multiple units of the same product, return one separate product object per unit
-  - The number of product objects in the JSON must reflect the true quantity purchased, not just the number of distinct product names
+    Product rules:
+    - Extract edible grocery items only
+    - Keep product wording close to the receipt, but expand obvious abbreviations when meaning is clear
+    - Do NOT deduplicate products
+    - If the same product appears multiple times on separate lines, do not have seperate entities, keep it as one entity but write the amount of the product in the JSON field number_of_products
+    - If the receipt indicates multiple units of the same product, return as one entry but change the number of products to the correct value
+    - The number of product objects in the JSON must reflect the true quantity purchased, not just the number of distinct product names
 
-  Critical duplicate and quantity rules:
-  - Never collapse repeated identical products into one entry
-  - If the same item appears 3 times on the receipt, output 3 separate product objects
-  - If quantity markers indicate multiple units, output that many separate product objects
-  - This includes markers such as: x2, x3, *2, *3, 2x, 3x, 2 @, 3 @, Qty 2, Qty 3, or clear multibuy quantity indicators tied to one product
-  - If a product line shows a quantity greater than 1, repeat the product entry once per unit
-  - If the same product appears once with quantity 3, output 3 separate identical product objects, not 1
-  - If the same product appears on three separate lines, also output 3 separate product objects
-  - Prefer preserving duplicates over accidentally merging them away
-  - Do not assume repeated items are duplicates to remove; assume they are separate purchased units unless clearly not products
+    Critical duplicate and quantity rules:
+    - collapse repeated identical products into one entry
+    - If the same item appears 3 times on the receipt, output 1 object but make the number of food items match the amount of them
+    - If quantity markers indicate multiple units, output 1 product object with the number variable set to the correct value
+    - This includes markers such as: x2, x3, *2, *3, 2x, 3x, 2 @, 3 @, Qty 2, Qty 3, or clear multibuy quantity indicators tied to one product
+    - Do not assume repeated items are duplicates to remove; assume they are separate purchased units unless clearly not products
 
-  Classification rules:
-  For each product, determine:
-  1. "product_name"
-  2. "food_group"
-  3. "storage_state"
-  4. "product_expiration_date"
-  5. "expiration_date_rating"
+    Classification rules:
+    For each product, determine:
+    1. "product_name"
+    2. "food_group"
+    3. "storage_state"
+    4. "product_expiration_date"
+    5. "expiration_date_rating"
 
-  Allowed values for "food_group":
-  - "meat"
-  - "dairy"
-  - "fruit"
-  - "vegetable"
-  - "beverage"
-  - "bakery"
-  - "frozen"
-  - "pantry"
-  - "snack"
-  - "prepared food"
-  - "seafood"
+    Allowed values for "food_group":
+    - "meat"
+    - "dairy"
+    - "fruit"
+    - "vegetable"
+    - "beverage"
+    - "bakery"
+    - "frozen"
+    - "pantry"
+    - "snack"
+    - "prepared food"
+    - "seafood"
 
-  Allowed values for "storage_state":
-  - "frozen"
-  - "chilled"
-  - "ambient"
-  - null
+    Allowed values for "storage_state":
+    - "frozen"
+    - "chilled"
+    - "ambient"
+    - null
 
-  Critical storage-state rules:
-  - If the product wording clearly suggests frozen storage, set "storage_state" to "frozen"
-  - Frozen wording or strong frozen clues override fresh produce logic
-  - Examples of strong frozen clues include: frozen, fries, chips, wedges, hash browns, ice cream, frozen pizza, frozen vegetables, frozen ready meals
-  - Potato chips / fries / wedges bought from a supermarket are often frozen products unless the receipt wording clearly suggests otherwise
-  - If "storage_state" is "frozen", do NOT estimate expiry using fresh vegetable, bakery, or chilled rules
-  - Frozen foods should usually have expiration estimates in weeks to months, not days
+    Critical storage-state rules:
+    - If the product wording clearly suggests frozen storage, set "storage_state" to "frozen"
+    - Frozen wording or strong frozen clues override fresh produce logic
+    - Examples of strong frozen clues include: frozen, fries, chips, wedges, hash browns, ice cream, frozen pizza, frozen vegetables, frozen ready meals
+    - Potato chips / fries / wedges bought from a supermarket are often frozen products unless the receipt wording clearly suggests otherwise
+    - If "storage_state" is "frozen", do NOT estimate expiry using fresh vegetable, bakery, or chilled rules
+    - Frozen foods should usually have expiration estimates in weeks to months, not days
 
-  Critical unopened storage assumption:
-  - Unless the receipt explicitly indicates otherwise, assume every product is unopened
-  - Assume every product is stored correctly in its proper place after purchase
-  - For chilled items, assume correct refrigeration
-  - For frozen items, assume correct freezer storage
-  - For ambient items, assume normal cupboard or pantry storage
-  - Estimate shelf life based on unopened products stored correctly, not opened products
-  - Do NOT shorten expiry because of opened-package assumptions
-  - Prefer typical manufacturer unopened shelf life over opened-at-home usage life
-  - For products like cream, yoghurt, cheese, butter, sauces, and packaged dairy, assume unopened refrigerated shelf life unless the receipt clearly indicates otherwise
+    Critical unopened storage assumption:
+    - Unless the receipt explicitly indicates otherwise, assume every product is unopened
+    - Assume every product is stored correctly in its proper place after purchase
+    - For chilled items, assume correct refrigeration
+    - For frozen items, assume correct freezer storage
+    - For ambient items, assume normal cupboard or pantry storage
+    - Estimate shelf life based on unopened products stored correctly, not opened products
+    - Do NOT shorten expiry because of opened-package assumptions
+    - Prefer typical manufacturer unopened shelf life over opened-at-home usage life
+    - For products like cream, yoghurt, cheese, butter, sauces, and packaged dairy, assume unopened refrigerated shelf life unless the receipt clearly indicates otherwise
 
-  Expiry rules:
-  - "product_expiration_date" must be exactly one date in DD-MM-YYYY format or null
-  - If a printed expiry is visible on the receipt, use it
-  - Otherwise estimate from "dateOfPurchase"
-  - If no reliable estimate is possible, use null
-  - Always be conservative
-  - Always subtract 1 day from the chosen shelf-life estimate
-  - Conservative does NOT mean unrealistically short; use realistic unopened shelf life for correctly stored products
+    Expiry rules:
+    - "product_expiration_date" must be exactly one date in DD-MM-YYYY format or null
+    - If a printed expiry is visible on the receipt, use it
+    - Otherwise estimate from "dateOfPurchase"
+    - If no reliable estimate is possible, use null
+    - Always be conservative
+    - Always subtract 1 day from the chosen shelf-life estimate
+    - Conservative does NOT mean unrealistically short; use realistic unopened shelf life for correctly stored products
 
-  Shelf-life estimation rules:
-  - Fresh meat or seafood: 1-3 days
-  - Packaged meat: 5-7 days
-  - Milk and fresh dairy: 5-7 days
-  - Double cream, whipping cream, single cream, and similar unopened chilled cream products: often substantially longer than fresh milk; use a realistic unopened chilled estimate, often weeks rather than days, unless the product appears freshly prepared
-  - Yoghurts and many unopened chilled dairy products often last longer than milk; do not force them into very short milk-style estimates
-  - Hard cheese: often weeks if unopened and refrigerated
-  - Processed cheese and cheese spread: moderate to long shelf life if unopened
-  - Butter and margarine: usually weeks if unopened and stored correctly
-  - Bread and fresh bakery: 3-5 days
-  - Fresh fruit and vegetables: 3-10 days
-  - Frozen foods of any kind: weeks to months, not days
-  - Pantry foods, snacks, chocolate, tinned goods, water, and shelf-stable beverages: weeks to months
-  - If unclear, prefer a safer but still category-correct estimate
-  - Avoid unrealistically early expiry dates for unopened packaged products
+    Shelf-life estimation rules:
+    - Fresh meat or seafood: 1-3 days
+    - Packaged meat: 5-7 days
+    - Milk and fresh dairy: 5-7 days
+    - Double cream, whipping cream, single cream, and similar unopened chilled cream products: often substantially longer than fresh milk; use a realistic unopened chilled estimate, often weeks rather than days, unless the product appears freshly prepared
+    - Yoghurts and many unopened chilled dairy products often last longer than milk; do not force them into very short milk-style estimates
+    - Hard cheese: often weeks if unopened and refrigerated
+    - Processed cheese and cheese spread: moderate to long shelf life if unopened
+    - Butter and margarine: usually weeks if unopened and stored correctly
+    - Bread and fresh bakery: 3-5 days
+    - Fresh fruit and vegetables: 3-10 days
+    - Frozen foods of any kind: weeks to months, not days
+    - Pantry foods, snacks, chocolate, tinned goods, water, and shelf-stable beverages: weeks to months
+    - If unclear, prefer a safer but still category-correct estimate
+    - Avoid unrealistically early expiry dates for unopened packaged products
 
-  Expiration rating rules:
-  - "green" = long shelf life or highly reliable estimate
-  - "yellow" = moderate shelf life
-  - "red" = short shelf life, high risk, or uncertain classification
+    Expiration rating rules:
+    - "green" = long shelf life or highly reliable estimate
+    - "yellow" = moderate shelf life
+    - "red" = short shelf life, high risk, or uncertain classification
 
-  Quality rules:
-  - Do not ignore repeated products
-  - Do not ignore fallback dates
-  - Do not leave obvious abbreviations unexpanded
-  - Prefer correct grouping over minimal extraction
-  - If a product appears to be frozen, do not assign a short fresh-food expiry
-  - Final check before output: make sure repeated products and quantity-based multiples are represented as separate product objects
-  - Final check before output: make sure unopened packaged dairy and chilled products are not given unrealistically short expiry dates
+    Quality rules:
+    - Do not ignore repeated products
+    - Do not ignore fallback dates
+    - Do not leave obvious abbreviations unexpanded
+    - Prefer correct grouping over minimal extraction
+    - If a product appears to be frozen, do not assign a short fresh-food expiry
+    - Final check before output: make sure repeated products and quantity-based multiples are represented as separate product objects
+    - Final check before output: make sure unopened packaged dairy and chilled products are not given unrealistically short expiry dates
 
-  Return exactly this JSON schema shape and nothing else:
-  {
-    "purchase_info": {
-      "dateOfPurchase": null,
-      "dateOfScan": "${currentDate}",
-      "supermarket": null
-    },
-    "products": [
-      {
-        "product_name": null,
-        "food_group": null,
-        "storage_state": null,
-        "product_expiration_date": null,
-        "expiration_date_rating": null
-      }
-    ]
-  }`;
+    Return exactly this JSON schema shape and nothing else:
+    {
+      "purchase_info": {
+        "dateOfPurchase": null,
+        "dateOfScan": "${currentDate}",
+        "supermarket": null
+      },
+      "products": [
+        {
+          "product_name": null,
+          "food_group": null,
+          "storage_state": null,
+          "product_expiration_date": null,
+          "expiration_date_rating": null,
+          "number_of_products" : null
+        }
+      ]
+    }`;
 
   const handleTakePhoto = async () => {
     const { granted } = await ImagePicker.requestCameraPermissionsAsync();

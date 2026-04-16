@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Modal,
   Image,
+  FlatList
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { RFValue } from "react-native-responsive-fontsize";
@@ -170,9 +171,7 @@ export default function AddItems() {
               </Text>
             }
             renderItem={({ item }) => {
-              const displayUnit = item.unit
-                ? `${item.quantity} x ${item.unit}`
-                : `${item.quantity} x`;
+              const displayUnit = item.unit ? `${item.foodQuantity} x ${item.unit}` : `${item.foodQuantity} x`;
               return (
                 <View style={styles.itemsRow}>
                   <Text
@@ -221,6 +220,7 @@ export default function AddItems() {
                   : null,
                 foodGroup: product.food_group,
                 storageState: product.storage_state,
+                foodQuantity: product.number_of_products
               }));
               setScannedItems(mapped);
               setReceiptVisible(false);
