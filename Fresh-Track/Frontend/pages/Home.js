@@ -1,17 +1,18 @@
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Text, StyleSheet, View, TextInput, ScrollView } from "react-native";
+import { SafeAreaView, useSafeAreaInsets  } from "react-native-safe-area-context";
+import { Text, StyleSheet, View, TextInput, ScrollView, TouchableOpacity, Modal, KeyboardAvoidingView, Platform } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import DashboardWidget from "../components/dashboardWidget";
 import ExpiringWidget from "../components/ExpiringSoonWidget";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect } from "react";
-import { useState } from "react";
-import { TouchableOpacity } from "react-native";
-import { Modal } from "react-native";
+import { useEffect, useState } from "react";
+
 
 export default function Home() {
+
+  const insets = useSafeAreaInsets();
+
   const [username, setUsername] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
   const [password, setPassword] = useState("");
@@ -98,21 +99,26 @@ export default function Home() {
         showsVerticalScrollIndicator={false}
         style={{ backgroundColor: "#F8F5EC" }}
       >
-        <SafeAreaView style={styles.container}>
-          <Text style={styles.h2}>Good Day {username}</Text>
-          <Text style={styles.h1}>Your Kitchen</Text>
+        <SafeAreaView style={styles.container}>          
           {username ? (
-            <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
-              <Text style={styles.logoutText}>Logout</Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center"}}>
+              <Text style={styles.h2}>Good Day {username}</Text>
+              <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
+                <Text style={styles.logoutText}>Logout</Text>
+              </TouchableOpacity>
+            </View>
           ) : (
-            <TouchableOpacity
-              style={styles.registerBtn}
-              onPress={() => setIsRegistering(true)}
-            >
-              <Text style={styles.registerBtnText}>Register / Login</Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center"}}>
+              <Text style={styles.h2}>Good Day {username}</Text>
+              <TouchableOpacity
+                style={styles.registerBtn}
+                onPress={() => setIsRegistering(true)}
+              >
+                <Text style={styles.registerBtnText}>Login</Text>
+              </TouchableOpacity>
+            </View>
           )}
+          <Text style={styles.h1}>Your Kitchen</Text>
 
           <View style={styles.mainContent}>
             {/* search bar */}
@@ -216,65 +222,86 @@ export default function Home() {
           </View>
         </SafeAreaView>
       </ScrollView>
+
+      {/* login/register modal */}
+
       <Modal
         visible={isRegistering}
         transparent={false}
         animationType="slide"
         onRequestClose={() => setIsRegistering(false)} // Android back button
       >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Create Account</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Username"
-              placeholderTextColor="#666"
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor="#666"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-            <TouchableOpacity style={styles.primaryBtn} onPress={register}>
-              <Text style={styles.primaryBtnText}>Create Account</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setIsRegistering(false)}>
-              <Text style={styles.cancelText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
+        {/* insets stop the modal going to the top when first running 
+        the app for some reason safearea view doesn't work properly with modals */}
+        <View style={[styles.modalContainer, { paddingTop: insets.top + 15 }]}>
+          {/* this moves the input field above the keyboard */}
+          <KeyboardAvoidingView 
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={{ flex: 1 }}
+          >
+            <ScrollView>
+              <TouchableOpacity
+                onPress={() => setIsRegistering(false)}
+                style={{ alignSelf: "flex-end" }}
+              >
+                <Text style={{ fontSize: 24, marginRight: 20 }}>✕</Text>
+              </TouchableOpacity>
+              <View style={{ marginTop: 50 }}>
+                <View style={styles.card}>
+                  <Text style={styles.cardTitle}>Register</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Username"
+                    placeholderTextColor="#666"
+                    value={username}
+                    onChangeText={setUsername}
+                    autoCapitalize="none"
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Password"
+                    placeholderTextColor="#666"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                  />
+                  <TouchableOpacity style={styles.primaryBtn} onPress={register}>
+                    <Text style={styles.primaryBtnText}>Create Account</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => setIsRegistering(false)}>
+                    <Text style={styles.cancelText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
 
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Log in</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Username"
-              placeholderTextColor="#666"
-              value={formUsername}
-              onChangeText={setFormUsername}
-              autoCapitalize="none"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor="#666"
-              value={formPassword}
-              onChangeText={setFormPassword}
-              secureTextEntry
-            />
-            <TouchableOpacity style={styles.primaryBtn} onPress={login}>
-              <Text style={styles.primaryBtnText}>Log In</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setIsRegistering(false)}>
-              <Text style={styles.cancelText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </SafeAreaView>
+                <View style={styles.card}>
+                  <Text style={styles.cardTitle}>Log in</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Username"
+                    placeholderTextColor="#666"
+                    value={formUsername}
+                    onChangeText={setFormUsername}
+                    autoCapitalize="none"
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Password"
+                    placeholderTextColor="#666"
+                    value={formPassword}
+                    onChangeText={setFormPassword}
+                    secureTextEntry
+                  />
+                  <TouchableOpacity style={styles.primaryBtn} onPress={login}>
+                    <Text style={styles.primaryBtnText}>Log In</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => setIsRegistering(false)}>
+                    <Text style={styles.cancelText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </View>
       </Modal>
     </>
   );
@@ -316,7 +343,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 5,
     // Android
-    elevation: 4,
+    elevation: 4
   },
   searchBar: {
     marginTop: 20,
@@ -335,45 +362,52 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   registerBtn: {
-    backgroundColor: "#4ade80",
+    backgroundColor: "#50863F",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
+    // width: "40%"
+    marginRight: 10
   },
 
   registerBtnText: {
-    color: "#0f1117",
-    fontWeight: "700",
-    fontSize: 13,
+    color: "#F8F5EC",
+    fontFamily: "Inter_500Medium",
+    fontSize: RFValue(14),
   },
   input: {
-    backgroundColor: "#0f1117",
+    backgroundColor: "#F8F5EC",
     borderWidth: 1,
-    borderColor: "#2a2d3a",
+    borderColor: "#B5B5B534",
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    color: "#ffffff",
+    color: "#000000",
     marginBottom: 12,
-    fontSize: 15,
+    fontSize: RFValue(13),
   },
   card: {
     margin: 16,
-    backgroundColor: "#1a1d27",
+    backgroundColor: "#50863F",
     borderRadius: 16,
     padding: 20,
-    borderWidth: 1,
-    borderColor: "#2a2d3a",
+    shadowColor: "#000",
+    shadowOffset: { width: -5, height: 5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    // Android
+    elevation: 4,
   },
 
   cardTitle: {
-    fontSize: 20,
-    fontWeight: "700",
+    fontSize: RFValue(20),
+    fontWeight: "Inter_400Regular",
     color: "#ffffff",
     marginBottom: 16,
+    textAlign: "center"
   },
   primaryBtn: {
-    backgroundColor: "#4ade80",
+    backgroundColor: "#F8F5EC",
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: "center",
@@ -382,19 +416,19 @@ const styles = StyleSheet.create({
 
   primaryBtnText: {
     color: "#0f1117",
-    fontWeight: "700",
-    fontSize: 15,
+    fontWeight: "Inter_700Bold",
+    fontSize: RFValue(14),
   },
 
   cancelText: {
     textAlign: "center",
-    color: "#6b7280",
-    fontSize: 14,
+    color: "#F8F5EC",
+    fontSize: RFValue(12),
   },
   logoutText: {
     color: "#ff4444",
-    fontWeight: "600",
-    fontSize: 13,
+    fontFamily: "Inter_500Medium",
+    fontSize: RFValue(14),
   },
   modalContainer: {
     flex: 1,
@@ -403,7 +437,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   logoutBtn: {
-    backgroundColor: "#2a1a1a",
+    backgroundColor: "#F8F5EC",
     borderWidth: 1,
     borderColor: "#ff4444",
     paddingHorizontal: 16,

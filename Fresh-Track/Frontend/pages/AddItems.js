@@ -200,7 +200,8 @@ export default function AddItems() {
         animationType="slide"
         onRequestClose={() => setReceiptVisible(false)}
       >
-        <View style={[styles.modalContainer, { paddingTop: insets.top + 15 }]}>
+        <View style={[styles.modalContainer, { paddingTop: insets.top + 15 }]}> {/* insets stop the modal going to the top when first running 
+        the app for some reason safearea view doesn't work properly */}
           <TouchableOpacity
             onPress={() => setReceiptVisible(false)}
             style={{ alignSelf: "flex-end" }}
