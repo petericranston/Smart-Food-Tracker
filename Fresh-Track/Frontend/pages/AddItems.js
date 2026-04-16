@@ -28,7 +28,7 @@ export default function AddItems() {
     loadUser();
   }, []);
 
-  const API_URL = "http://localhost:3001";
+  const API_URL = process.env.EXPO_PUBLIC_API_URL;
   const insets = useSafeAreaInsets();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -85,7 +85,21 @@ export default function AddItems() {
     setSearchQuery("");
   }
 
-  async function saveIngredient(ingredientName) {
+  async function addIngredientToPantry(ingredientName) {
+    setScannedItems((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        name: ingredientName,
+        expiryDate: null,
+        foodQuantity: 1,
+        unit: null,
+      },
+    ]);
+    setSearchVisible(false);
+  }
+
+  async function saveIngredients(ingredientName) {
     try {
       const savedUsername = await AsyncStorage.getItem("username");
       if (!savedUsername) {
@@ -190,6 +204,13 @@ export default function AddItems() {
             }}
           />
         </View>
+        <TouchableOpacity
+          style={styles.saveItems}
+          onPress={() => saveIngredients()}
+        >
+          <Ionicons name="checkmark-circle-outline" color="white" size={20} />
+          <Text style={styles.saveItemsText}>Save Items</Text>
+        </TouchableOpacity>
       </SafeAreaView>
 
       {/* ---------Modals--------- */}
@@ -302,7 +323,7 @@ export default function AddItems() {
                   </View>
                   <TouchableOpacity
                     style={styles.saveBtn}
-                    onPress={() => saveIngredient(item.name)}
+                    onPress={() => addIngredientToPantry(item.name)}
                   >
                     <Text style={styles.saveBtnText}>+ Add to Pantry</Text>
                   </TouchableOpacity>
@@ -426,5 +447,27 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontWeight: "600",
     fontSize: 14,
+  },
+  saveItems: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#16a34a",
+    marginTop: 16,
+    marginHorizontal: 40,
+    paddingVertical: 14,
+    borderRadius: 14,
+    shadowColor: "#16a34a",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  saveItemsText: {
+    color: "#ffffff",
+    fontSize: RFValue(15),
+    fontFamily: "Inter_600SemiBold",
+    letterSpacing: 0.5,
   },
 });

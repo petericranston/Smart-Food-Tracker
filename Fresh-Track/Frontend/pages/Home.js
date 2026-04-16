@@ -1,5 +1,18 @@
-import { SafeAreaView, useSafeAreaInsets  } from "react-native-safe-area-context";
-import { Text, StyleSheet, View, TextInput, ScrollView, TouchableOpacity, Modal, KeyboardAvoidingView, Platform } from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import {
+  Text,
+  StyleSheet,
+  View,
+  TextInput,
+  ScrollView,
+  TouchableOpacity,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import DashboardWidget from "../components/dashboardWidget";
 import ExpiringWidget from "../components/ExpiringSoonWidget";
@@ -8,15 +21,14 @@ import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 
-
 export default function Home() {
-
   const insets = useSafeAreaInsets();
 
   const [username, setUsername] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
   const [password, setPassword] = useState("");
-  const API_URL = "http://localhost:3001";
+  const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
   const [formUsername, setFormUsername] = useState("");
   const [formPassword, setFormPassword] = useState("");
 
@@ -99,16 +111,28 @@ export default function Home() {
         showsVerticalScrollIndicator={false}
         style={{ backgroundColor: "#F8F5EC" }}
       >
-        <SafeAreaView style={styles.container}>          
+        <SafeAreaView style={styles.container}>
           {username ? (
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center"}}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
               <Text style={styles.h2}>Good Day {username}</Text>
               <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
                 <Text style={styles.logoutText}>Logout</Text>
               </TouchableOpacity>
             </View>
           ) : (
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center"}}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
               <Text style={styles.h2}>Good Day {username}</Text>
               <TouchableOpacity
                 style={styles.registerBtn}
@@ -235,7 +259,7 @@ export default function Home() {
         the app for some reason safearea view doesn't work properly with modals */}
         <View style={[styles.modalContainer, { paddingTop: insets.top + 15 }]}>
           {/* this moves the input field above the keyboard */}
-          <KeyboardAvoidingView 
+          <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={{ flex: 1 }}
           >
@@ -265,7 +289,10 @@ export default function Home() {
                     onChangeText={setPassword}
                     secureTextEntry
                   />
-                  <TouchableOpacity style={styles.primaryBtn} onPress={register}>
+                  <TouchableOpacity
+                    style={styles.primaryBtn}
+                    onPress={register}
+                  >
                     <Text style={styles.primaryBtnText}>Create Account</Text>
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => setIsRegistering(false)}>
@@ -343,7 +370,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 5,
     // Android
-    elevation: 4
+    elevation: 4,
   },
   searchBar: {
     marginTop: 20,
@@ -367,7 +394,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     // width: "40%"
-    marginRight: 10
+    marginRight: 10,
   },
 
   registerBtnText: {
@@ -404,7 +431,7 @@ const styles = StyleSheet.create({
     fontWeight: "Inter_400Regular",
     color: "#ffffff",
     marginBottom: 16,
-    textAlign: "center"
+    textAlign: "center",
   },
   primaryBtn: {
     backgroundColor: "#F8F5EC",
