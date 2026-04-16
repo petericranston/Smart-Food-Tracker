@@ -7,7 +7,7 @@ import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
-
+import InvDropdown from "../components/InvDropdown";
 
 export default function Home() {
 
@@ -16,9 +16,11 @@ export default function Home() {
   const [username, setUsername] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
   const [password, setPassword] = useState("");
-  const API_URL = "http://localhost:3001";
+  const API_URL = "http://192.168.1.243:3001";
   const [formUsername, setFormUsername] = useState("");
   const [formPassword, setFormPassword] = useState("");
+
+  const [viewingInv, setViewingInv] = useState(false)
 
   useEffect(() => {
     const loadUser = async () => {
@@ -43,9 +45,9 @@ export default function Home() {
     "bread",
   ];
   const dummyExpiring = [
-    { id: 1, name: "chicken", expiryDate: "2026-04-05" },
-    { id: 2, name: "milk", expiryDate: "2026-04-06" },
-    { id: 3, name: "eggs", expiryDate: "2026-04-20" },
+    { id: 1, name: "chicken", expiryDate: "2026-04-18" },
+    { id: 2, name: "milk", expiryDate: "2026-04-20" },
+    { id: 3, name: "eggs", expiryDate: "2026-05-20" },
   ];
 
   const navigation = useNavigation();
@@ -132,10 +134,12 @@ export default function Home() {
             </View>
 
             <View style={styles.dashWidgetContainer}>
-              <DashboardWidget
-                count={dummyItems.length}
-                title="Items Tracked"
-              />
+              <TouchableOpacity onPress={() => setViewingInv(true)}>
+                <DashboardWidget
+                  count={dummyItems.length}
+                  title="Items Tracked"
+                />
+              </TouchableOpacity>
               <DashboardWidget
                 count={dummyExpiring.length}
                 title="Expiring Soon"
@@ -303,6 +307,67 @@ export default function Home() {
           </KeyboardAvoidingView>
         </View>
       </Modal>
+
+      {/* full inventory modal */}
+      <Modal
+        visible={viewingInv}
+        transparent={false}
+        animationType="slide"
+        onRequestClose={() => setViewingInv(false)} // Android back button
+      >
+        <View style={[styles.modalContainer, { paddingTop: insets.top + 25, paddingLeft: 25 }]}>
+          <ScrollView>
+            <TouchableOpacity onPress={() => setViewingInv(false)} style={{ backgroundColor: "#50863F", padding: 10, width: "20%", borderRadius: 20, marginBottom: 20 }}>
+              <Text style={{ color: "white", textAlign: "center", fontWeight: "Inter_600SemiBold", fontSize: RFValue(14), }}>Close</Text>
+            </TouchableOpacity>
+
+            <Text style={ [styles.h1, {marginBottom: 5 }] }>Full Inventory</Text>
+            <Text style={styles.h2}>All items in your kitchen</Text> {/* this will change depending on the filter chosen */}
+            
+            {/* dropdown */}
+
+            {/* this next bit will need to be change to use conditional rendering once we have data setup and dropdown added */}
+            <View>
+              <Text style={[styles.h4, {marginBottom: 20}]}>Dairy</Text>
+              <View>
+                {dummyExpiring.map((item) => {
+                  const today = new Date();
+                  const expiry = new Date(item.expiryDate);
+
+                  const diffTime = expiry - today;
+                  const daysLeft = Math.ceil(
+                    diffTime / (1000 * 60 * 60 * 24),
+                  ); // convert ms to days
+                  const getExpiryColor = (daysLeft) => {
+                    if (daysLeft <= 2) return "#ff1717"; // red - expires in a couple days
+                    if (daysLeft <= 6) return "#ff7723"; // orange - very soon
+                    return "#50863F"; // green - plenty of time
+                  };
+                  return(
+                    <ExpiringWidget
+                      key={item.id}
+                      image={require("../assets/foodplaceholders/mschicken.png")}
+                      name={item.name}
+                      expireMessage={`This item is expiring in ${daysLeft} days!`}
+                      expiringIn={`${daysLeft} days`}
+                      dateStyling={{
+                        backgroundColor: getExpiryColor(daysLeft),
+                        justifyContent: "center",
+                        paddingLeft: 10,
+                        paddingRight: 10,
+                        height: 33,
+                        marginTop: 5,
+                        borderRadius: 10
+                      }}
+                    />
+                  )
+                })}
+              </View>
+            </View>
+
+          </ScrollView>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -331,6 +396,10 @@ const styles = StyleSheet.create({
   },
   h3: {
     fontSize: RFValue(20),
+    fontFamily: "Inter_600SemiBold",
+  },
+  h4: {
+    fontSize: RFValue(18),
     fontFamily: "Inter_600SemiBold",
   },
   dashWidgetContainer: {

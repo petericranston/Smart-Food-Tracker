@@ -28,7 +28,7 @@ export default function AddItems() {
     loadUser();
   }, []);
 
-  const API_URL = "http://localhost:3001";
+  const API_URL = "http://http://192.168.1.243:3001";
   const insets = useSafeAreaInsets();
 
   const [searchQuery, setSearchQuery] = useState("");
