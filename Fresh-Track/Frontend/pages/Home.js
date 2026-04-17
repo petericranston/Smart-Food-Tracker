@@ -327,7 +327,7 @@ export default function Home() {
         <View style={[styles.modalContainer, { paddingTop: insets.top + 25, paddingLeft: 25 }]}>
           <ScrollView>
             <TouchableOpacity onPress={() => setViewingInv(false)} style={{ backgroundColor: "#50863F", padding: 10, width: "20%", borderRadius: 20, marginBottom: 20 }}>
-              <Text style={{ color: "white", textAlign: "center", fontWeight: "Inter_600SemiBold", fontSize: RFValue(14), }}>Close</Text>
+              <Text style={{ color: "white", textAlign: "center", fontWeight: "Inter_600SemiBold", fontSize: RFValue(14) }}>Close</Text>
             </TouchableOpacity>
 
             <Text style={ [styles.h1, {marginBottom: 5 }] }>Full Inventory</Text>
