@@ -45,15 +45,15 @@ export default function Home() {
     "bread",
   ];
   const dummyExpiring = [
-    { id: 1, name: "chicken", expiryDate: "2026-04-18" },
-    { id: 2, name: "milk", expiryDate: "2026-04-20" },
-    { id: 3, name: "eggs", expiryDate: "2026-05-20" },
+    { id: 1, name: "chicken", expiryDate: "2026-04-18", category: "Protein" },
+    { id: 2, name: "milk", expiryDate: "2026-04-20", category: "Dairy" },
+    { id: 3, name: "eggs", expiryDate: "2026-05-20", category: "Protein" },
   ];
 
   // for the inventory dropdown
   const [category, setCategory] = useState("")
   const dropCategories = ["All items", "Expiry date"]
-  const foodCategories = ["Dairy", "Meat", "Fish", "Fruit", "Vegetables"];
+  const foodCategories = ["Dairy", "Protein", "Fruit", "Vegetables"];
 
   const navigation = useNavigation();
 
@@ -334,41 +334,53 @@ export default function Home() {
             <InvDropdown options={dropCategories} onSelect={(value) => setCategory(value)}/>
             {/* this next bit will need to be change to use conditional rendering once we have data setup and dropdown added */}
             <View>
-              <Text style={[styles.h4, {marginBottom: 20}]}>Dairy</Text>
-              <View>
-                {dummyExpiring.map((item) => {
-                  const today = new Date();
-                  const expiry = new Date(item.expiryDate);
+              {category === "All items" && (
+                foodCategories.map((item) => {
+                  const itemsInCategory = dummyExpiring.filter(item => item.category === category);
+  
+                  if (itemsInCategory.length === 0) return null; // skip empty categories
 
-                  const diffTime = expiry - today;
-                  const daysLeft = Math.ceil(
-                    diffTime / (1000 * 60 * 60 * 24),
-                  ); // convert ms to days
-                  const getExpiryColor = (daysLeft) => {
-                    if (daysLeft <= 2) return "#ff1717"; // red - expires in a couple days
-                    if (daysLeft <= 6) return "#ff7723"; // orange - very soon
-                    return "#50863F"; // green - plenty of time
-                  };
                   return(
-                    <ExpiringWidget
-                      key={item.id}
-                      image={require("../assets/foodplaceholders/mschicken.png")}
-                      name={item.name}
-                      expireMessage={`This item is expiring in ${daysLeft} days!`}
-                      expiringIn={`${daysLeft} days`}
-                      dateStyling={{
-                        backgroundColor: getExpiryColor(daysLeft),
-                        justifyContent: "center",
-                        paddingLeft: 10,
-                        paddingRight: 10,
-                        height: 33,
-                        marginTop: 5,
-                        borderRadius: 10
-                      }}
-                    />
+                    <View key={category}>
+                      <Text style={[styles.h4, {marginBottom: 20}]}>{item}</Text>
+                      {itemsInCategory.map((item) => {
+                        const today = new Date();
+                        const expiry = new Date(item.expiryDate);
+
+                        const diffTime = expiry - today;
+                        const daysLeft = Math.ceil(
+                          diffTime / (1000 * 60 * 60 * 24),
+                        ); // convert ms to days
+                        const getExpiryColor = (daysLeft) => {
+                          if (daysLeft <= 2) return "#ff1717"; // red - expires in a couple days
+                          if (daysLeft <= 6) return "#ff7723"; // orange - very soon
+                          return "#50863F"; // green - plenty of time
+                        };
+                        return(
+                          <ExpiringWidget
+                            key={item.id}
+                            image={require("../assets/foodplaceholders/mschicken.png")}
+                            name={item.name}
+                            expireMessage={`This item is expiring in ${daysLeft} days!`}
+                            expiringIn={`${daysLeft} days`}
+                            dateStyling={{
+                              backgroundColor: getExpiryColor(daysLeft),
+                              justifyContent: "center",
+                              paddingLeft: 10,
+                              paddingRight: 10,
+                              height: 33,
+                              marginTop: 5,
+                              borderRadius: 10
+                            }}
+                          />
+                        )
+                      })}
+                    </View>
                   )
-                })}
-              </View>
+                })
+              )}
+              
+              
             </View>
 
           </ScrollView>
