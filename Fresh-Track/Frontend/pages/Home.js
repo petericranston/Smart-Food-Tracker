@@ -50,6 +50,11 @@ export default function Home() {
     { id: 3, name: "eggs", expiryDate: "2026-05-20" },
   ];
 
+  // for the inventory dropdown
+  const [category, setCategory] = useState("")
+  const dropCategories = ["All items", "Expiry date"]
+  const foodCategories = ["Dairy", "Meat", "Fish", "Fruit", "Vegetables"];
+
   const navigation = useNavigation();
 
   async function register() {
@@ -322,10 +327,11 @@ export default function Home() {
             </TouchableOpacity>
 
             <Text style={ [styles.h1, {marginBottom: 5 }] }>Full Inventory</Text>
-            <Text style={styles.h2}>All items in your kitchen</Text> {/* this will change depending on the filter chosen */}
+            {/* this will change depending on the filter chosen */}
+            <Text style={styles.h2}>All items in your kitchen</Text> 
             
             {/* dropdown */}
-
+            <InvDropdown options={dropCategories} onSelect={(value) => setCategory(value)}/>
             {/* this next bit will need to be change to use conditional rendering once we have data setup and dropdown added */}
             <View>
               <Text style={[styles.h4, {marginBottom: 20}]}>Dairy</Text>
