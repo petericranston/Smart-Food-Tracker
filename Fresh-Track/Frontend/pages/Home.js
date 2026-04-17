@@ -51,7 +51,7 @@ export default function Home() {
   ];
 
   // for the inventory dropdown
-  const [category, setCategory] = useState("")
+  const [category, setCategory] = useState("All items")
   const dropCategories = ["All items", "Expiry date"]
   const foodCategories = ["Dairy", "Protein", "Fruit", "Vegetables"];
 
@@ -336,12 +336,11 @@ export default function Home() {
             <View>
               {category === "All items" && (
                 foodCategories.map((item) => {
-                  const itemsInCategory = dummyExpiring.filter(item => item.category === category);
-  
+                  const itemsInCategory = dummyExpiring.filter(i => i.category === item);
                   if (itemsInCategory.length === 0) return null; // skip empty categories
 
                   return(
-                    <View key={category}>
+                    <View key={item}>
                       <Text style={[styles.h4, {marginBottom: 20}]}>{item}</Text>
                       {itemsInCategory.map((item) => {
                         const today = new Date();
