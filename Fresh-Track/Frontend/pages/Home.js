@@ -55,6 +55,10 @@ export default function Home() {
   const dropCategories = ["All items", "Expiry date"]
   const foodCategories = ["Dairy", "Protein", "Fruit", "Vegetables"];
 
+  const sortedItems = [...dummyExpiring].sort(
+    (a, b) => new Date(a.expiryDate) - new Date(b.expiryDate)
+  );
+
   const navigation = useNavigation();
 
   async function register() {
@@ -334,7 +338,7 @@ export default function Home() {
             <InvDropdown options={dropCategories} onSelect={(value) => setCategory(value)}/>
             {/* this next bit will need to be change to use conditional rendering once we have data setup and dropdown added */}
             <View>
-              {category === "All items" && (
+              {category === "All items" ? (
                 foodCategories.map((item) => {
                   const itemsInCategory = dummyExpiring.filter(i => i.category === item);
                   if (itemsInCategory.length === 0) return null; // skip empty categories
@@ -377,6 +381,38 @@ export default function Home() {
                     </View>
                   )
                 })
+              ) : category === "Expiry date" ? (
+                sortedItems.map((item) => {
+                  const today = new Date();
+                  const expiry = new Date(item.expiryDate);
+
+                  const diffTime = expiry - today;
+                  const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                  return (
+                    <ExpiringWidget
+                      key={item.id}
+                      image={require("../assets/foodplaceholders/mschicken.png")}
+                      name={item.name}
+                      expireMessage={`This item is expiring in ${daysLeft} days!`}
+                      expiringIn={`${daysLeft} days`}
+                      dateStyling={{
+                        backgroundColor:
+                          daysLeft <= 2 ? "#ff1717" :
+                          daysLeft <= 6 ? "#ff7723" :
+                          "#50863F",
+                        justifyContent: "center",
+                        paddingLeft: 10,
+                        paddingRight: 10,
+                        height: 33,
+                        marginTop: 5,
+                        borderRadius: 10,
+                      }}
+                    />
+                  );
+                })
+              ) : (
+                <Text>Please add items to get started</Text>
               )}
               
               
