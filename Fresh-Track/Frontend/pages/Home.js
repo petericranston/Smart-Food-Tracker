@@ -33,7 +33,7 @@ export default function Home() {
   const [formUsername, setFormUsername] = useState("");
   const [formPassword, setFormPassword] = useState("");
 
-  const [viewingInv, setViewingInv] = useState(false)
+  const [viewingInv, setViewingInv] = useState(false);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -64,12 +64,12 @@ export default function Home() {
   ];
 
   // for the inventory dropdown
-  const [category, setCategory] = useState("All items")
-  const dropCategories = ["All items", "Expiry date"]
+  const [category, setCategory] = useState("All items");
+  const dropCategories = ["All items", "Expiry date"];
   const foodCategories = ["Dairy", "Protein", "Fruit", "Vegetables"];
 
   const sortedItems = [...dummyExpiring].sort(
-    (a, b) => new Date(a.expiryDate) - new Date(b.expiryDate)
+    (a, b) => new Date(a.expiryDate) - new Date(b.expiryDate),
   );
 
   const navigation = useNavigation();
@@ -352,28 +352,58 @@ export default function Home() {
         animationType="slide"
         onRequestClose={() => setViewingInv(false)} // Android back button
       >
-        <View style={[styles.modalContainer, { paddingTop: insets.top + 25, paddingLeft: 25 }]}>
+        <View
+          style={[
+            styles.modalContainer,
+            { paddingTop: insets.top + 25, paddingLeft: 25 },
+          ]}
+        >
           <ScrollView>
-            <TouchableOpacity onPress={() => setViewingInv(false)} style={{ backgroundColor: "#50863F", padding: 10, width: "20%", borderRadius: 20, marginBottom: 20 }}>
-              <Text style={{ color: "white", textAlign: "center", fontWeight: "Inter_600SemiBold", fontSize: RFValue(14) }}>Close</Text>
+            <TouchableOpacity
+              onPress={() => setViewingInv(false)}
+              style={{
+                backgroundColor: "#50863F",
+                padding: 10,
+                width: "20%",
+                borderRadius: 20,
+                marginBottom: 20,
+              }}
+            >
+              <Text
+                style={{
+                  color: "white",
+                  textAlign: "center",
+                  fontWeight: "Inter_600SemiBold",
+                  fontSize: RFValue(14),
+                }}
+              >
+                Close
+              </Text>
             </TouchableOpacity>
 
-            <Text style={ [styles.h1, {marginBottom: 5 }] }>Full Inventory</Text>
+            <Text style={[styles.h1, { marginBottom: 5 }]}>Full Inventory</Text>
             {/* this will change depending on the filter chosen */}
-            <Text style={styles.h2}>All items in your kitchen</Text> 
-            
+            <Text style={styles.h2}>All items in your kitchen</Text>
+
             {/* dropdown */}
-            <InvDropdown options={dropCategories} onSelect={(value) => setCategory(value)}/>
+            <InvDropdown
+              options={dropCategories}
+              onSelect={(value) => setCategory(value)}
+            />
             {/* this next bit will need to be change to use conditional rendering once we have data setup and dropdown added */}
             <View>
               {category === "All items" ? (
                 foodCategories.map((item) => {
-                  const itemsInCategory = dummyExpiring.filter(i => i.category === item);
+                  const itemsInCategory = dummyExpiring.filter(
+                    (i) => i.category === item,
+                  );
                   if (itemsInCategory.length === 0) return null; // skip empty categories
 
-                  return(
+                  return (
                     <View key={item}>
-                      <Text style={[styles.h4, {marginBottom: 20}]}>{item}</Text>
+                      <Text style={[styles.h4, { marginBottom: 20 }]}>
+                        {item}
+                      </Text>
                       {itemsInCategory.map((item) => {
                         const today = new Date();
                         const expiry = new Date(item.expiryDate);
@@ -387,7 +417,7 @@ export default function Home() {
                           if (daysLeft <= 6) return "#ff7723"; // orange - very soon
                           return "#50863F"; // green - plenty of time
                         };
-                        return(
+                        return (
                           <ExpiringWidget
                             key={item.id}
                             image={require("../assets/foodplaceholders/mschicken.png")}
@@ -401,13 +431,13 @@ export default function Home() {
                               paddingRight: 10,
                               height: 33,
                               marginTop: 5,
-                              borderRadius: 10
+                              borderRadius: 10,
                             }}
                           />
-                        )
+                        );
                       })}
                     </View>
-                  )
+                  );
                 })
               ) : category === "Expiry date" ? (
                 sortedItems.map((item) => {
@@ -426,9 +456,11 @@ export default function Home() {
                       expiringIn={`${daysLeft} days`}
                       dateStyling={{
                         backgroundColor:
-                          daysLeft <= 2 ? "#ff1717" :
-                          daysLeft <= 6 ? "#ff7723" :
-                          "#50863F",
+                          daysLeft <= 2
+                            ? "#ff1717"
+                            : daysLeft <= 6
+                              ? "#ff7723"
+                              : "#50863F",
                         justifyContent: "center",
                         paddingLeft: 10,
                         paddingRight: 10,
@@ -442,10 +474,7 @@ export default function Home() {
               ) : (
                 <Text>Please add items to get started</Text>
               )}
-              
-              
             </View>
-
           </ScrollView>
         </View>
       </Modal>
