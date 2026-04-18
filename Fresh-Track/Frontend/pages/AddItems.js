@@ -91,27 +91,29 @@ export default function AddItems() {
       {
         id: Date.now(),
         name: ingredientName,
-        expiryDate: null,
+        expiryDate: "2026-05-28",
         foodQuantity: 1,
         unit: null,
+        foodGroup: null,
+        storageState: null,
       },
     ]);
     setSearchVisible(false);
   }
 
-  async function saveIngredients(ingredientName) {
+  async function saveIngredients(SearchedIngredients) {
     try {
       const savedUsername = await AsyncStorage.getItem("username");
       if (!savedUsername) {
         console.log("No user logged in");
         return;
       }
-      const response = await fetch(`${API_URL}/api/addIngredient`, {
+      const response = await fetch(`${API_URL}/api/saveIngredients`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username: savedUsername,
-          ingredient: { IngredientName: ingredientName },
+          ingredients: SearchedIngredients,
         }),
       });
       const data = await response.json();
@@ -206,7 +208,7 @@ export default function AddItems() {
         </View>
         <TouchableOpacity
           style={styles.saveItems}
-          onPress={() => saveIngredients()}
+          onPress={() => saveIngredients(scannedItems)}
         >
           <Ionicons name="checkmark-circle-outline" color="white" size={20} />
           <Text style={styles.saveItemsText}>Save Items</Text>
@@ -247,6 +249,7 @@ export default function AddItems() {
                 foodGroup: product.food_group,
                 storageState: product.storage_state,
                 foodQuantity: product.number_of_products,
+                unit: null,
               }));
               setScannedItems(mapped);
               setReceiptVisible(false);

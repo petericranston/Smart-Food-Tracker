@@ -35,13 +35,26 @@ export default function Home() {
 
   const [viewingInv, setViewingInv] = useState(false);
 
+  const [AllIngredients, setAllIngredients] = useState([]);
+
   useEffect(() => {
-    const loadUser = async () => {
+    async function init() {
       const savedUsername = await AsyncStorage.getItem("username");
-      if (savedUsername) setUsername(savedUsername);
-    };
-    loadUser();
+      if (!savedUsername) return;
+      setUsername(savedUsername);
+
+      const response = await fetch(`${API_URL}/api/getIngredients`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: savedUsername }),
+      });
+      const data = await response.json();
+      if (response.ok) setAllIngredients(data);
+      console.log(data);
+    }
+    init();
   }, []);
+
   const dummyItems = [
     "chicken",
     "beef",
@@ -198,15 +211,15 @@ export default function Home() {
                         color: "#50863F",
                         textDecorationLine: "underline",
                       }}
-                      onPress={() => dummyExpiring}
+                      onPress={() => AllIngredients}
                     >
                       See All
                     </Text>
                   </View>
                   <View>
-                    {dummyExpiring.map((item) => {
+                    {AllIngredients.map((item) => {
                       const today = new Date();
-                      const expiry = new Date(item.expiryDate);
+                      const expiry = new Date(item.ExpiryDate);
 
                       const diffTime = expiry - today;
                       const daysLeft = Math.ceil(
@@ -219,9 +232,9 @@ export default function Home() {
                       };
                       return (
                         <ExpiringWidget
-                          key={item.id}
+                          key={item._id}
                           image={require("../assets/foodplaceholders/mschicken.png")}
-                          name={item.name}
+                          name={item.IngredientName}
                           expireMessage={`This item is expiring in ${daysLeft} days!`}
                           expiringIn={`${daysLeft} days`}
                           dateStyling={{

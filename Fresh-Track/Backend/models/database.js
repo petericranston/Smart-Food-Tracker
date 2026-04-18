@@ -3,9 +3,12 @@ const mongoose = require("mongoose");
 const { Schema, model } = mongoose;
 
 const ingredientSchema = new Schema({
-  //Making database document layout
-  IngredientName: String,
-  ExpiryDate: Date,
+  IngredientName: { type: String, required: true },
+  ExpiryDate: { type: Date, default: null },
+  FoodQuantity: { type: Number, default: 1 },
+  Unit: { type: String, default: null },
+  FoodGroup: { type: String, default: null },
+  StorageState: { type: String, default: null },
 });
 
 const userSchema = new Schema({
@@ -35,12 +38,19 @@ async function newUser(username, password, ingredients) {
 async function addIngredients(id, ingredients) {
   //Adding Ingredients function
   try {
-    const ingredient = await userData.updateOne(
-      //Pushing new ingredients on mongodb
+    const mapped = ingredients.map((item) => ({
+      IngredientName: item.name,
+      ExpiryDate: item.expiryDate || null,
+      FoodQuantity: item.foodQuantity || 1,
+      Unit: item.unit || null,
+      FoodGroup: item.foodGroup || null,
+      StorageState: item.storageState || null,
+    }));
+    const result = await userData.updateOne(
       { _id: id },
-      { $push: { Ingredients: { $each: ingredients } } },
+      { $push: { Ingredients: { $each: mapped } } },
     );
-    return ingredient;
+    return result;
   } catch (err) {
     console.log("Error:", err);
     return false;

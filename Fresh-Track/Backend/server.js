@@ -60,16 +60,32 @@ app.post("/api/searchProduct", async (request, response) => {
   response.json(results);
 });
 
-app.post("/api/addIngredient", async (request, response) => {
+app.post("/api/saveIngredients", async (request, response) => {
   try {
-    const { username, ingredient } = request.body;
+    const { username, ingredients } = request.body;
 
     const user = await database.getUserByUsername(username);
     if (!user) return response.status(404).json({ error: "User not found" });
 
-    await database.addIngredients(user._id, [ingredient]);
+    await database.addIngredients(user._id, ingredients);
 
     response.json({ success: true });
+  } catch (err) {
+    console.log(err);
+    response.status(500).json({ error: "Server error" });
+  }
+});
+
+app.post("/api/getIngredients", async (request, response) => {
+  try {
+    const { username } = request.body;
+
+    const user = await database.getUserByUsername(username);
+    if (!user) return response.status(404).json({ error: "User not found" });
+
+    const ingredients = await database.getIngredients(user._id);
+
+    response.json(ingredients);
   } catch (err) {
     console.log(err);
     response.status(500).json({ error: "Server error" });
