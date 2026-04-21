@@ -94,7 +94,7 @@ export default function AddItems() {
         expiryDate: "2026-05-28",
         foodQuantity: 1,
         unit: null,
-        foodGroup: null,
+        foodGroup: "Protein",
         storageState: null,
       },
     ]);
@@ -119,6 +119,7 @@ export default function AddItems() {
       const data = await response.json();
       if (!response.ok) return;
       console.log("Ingredient saved!", data);
+      setScannedItems([]);
     } catch (error) {
       console.log("Error saving ingredient", error);
     }

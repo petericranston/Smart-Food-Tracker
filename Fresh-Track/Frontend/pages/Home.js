@@ -17,9 +17,9 @@ import { RFValue } from "react-native-responsive-fontsize";
 import DashboardWidget from "../components/dashboardWidget";
 import ExpiringWidget from "../components/ExpiringSoonWidget";
 import { Feather } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import InvDropdown from "../components/InvDropdown";
 
 export default function Home() {
@@ -37,23 +37,25 @@ export default function Home() {
 
   const [AllIngredients, setAllIngredients] = useState([]);
 
-  useEffect(() => {
-    async function init() {
-      const savedUsername = await AsyncStorage.getItem("username");
-      if (!savedUsername) return;
-      setUsername(savedUsername);
+  useFocusEffect(
+    useCallback(() => {
+      async function init() {
+        const savedUsername = await AsyncStorage.getItem("username");
+        if (!savedUsername) return;
+        setUsername(savedUsername);
 
-      const response = await fetch(`${API_URL}/api/getIngredients`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: savedUsername }),
-      });
-      const data = await response.json();
-      if (response.ok) setAllIngredients(data);
-      console.log(data);
-    }
-    init();
-  }, []);
+        const response = await fetch(`${API_URL}/api/getIngredients`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: savedUsername }),
+        });
+        const data = await response.json();
+        if (response.ok) setAllIngredients(data);
+        console.log(data);
+      }
+      init();
+    }, []),
+  );
 
   const dummyItems = [
     "chicken",
@@ -81,7 +83,7 @@ export default function Home() {
   const dropCategories = ["All items", "Expiry date"];
   const foodCategories = ["Dairy", "Protein", "Fruit", "Vegetables"];
 
-  const sortedItems = [...dummyExpiring].sort(
+  const sortedItems = [...AllIngredients].sort(
     (a, b) => new Date(a.expiryDate) - new Date(b.expiryDate),
   );
 
@@ -128,6 +130,7 @@ export default function Home() {
   async function logout() {
     await AsyncStorage.removeItem("username");
     setUsername("");
+    setAllIngredients([]);
   }
 
   return (
@@ -183,18 +186,18 @@ export default function Home() {
             <View style={styles.dashWidgetContainer}>
               <TouchableOpacity onPress={() => setViewingInv(true)}>
                 <DashboardWidget
-                  count={dummyItems.length}
+                  count={AllIngredients.length}
                   title="Items Tracked"
                 />
               </TouchableOpacity>
               <DashboardWidget
-                count={dummyExpiring.length}
+                count={AllIngredients.length}
                 title="Expiring Soon"
               />
             </View>
 
             <View style={{ marginTop: 50 }}>
-              {dummyExpiring.length > 0 ? (
+              {AllIngredients.length > 0 ? (
                 <>
                   <View
                     style={{
@@ -251,7 +254,7 @@ export default function Home() {
                     })}
                   </View>
                 </>
-              ) : dummyItems.length > 0 && dummyExpiring.length <= 0 ? (
+              ) : AllIngredients.length > 0 && AllIngredients.length <= 0 ? (
                 <View>
                   <Text>What how is this possible?</Text>
                 </View>
@@ -407,8 +410,8 @@ export default function Home() {
             <View>
               {category === "All items" ? (
                 foodCategories.map((item) => {
-                  const itemsInCategory = dummyExpiring.filter(
-                    (i) => i.category === item,
+                  const itemsInCategory = AllIngredients.filter(
+                    (i) => i.FoodGroup === item,
                   );
                   if (itemsInCategory.length === 0) return null; // skip empty categories
 
@@ -419,7 +422,7 @@ export default function Home() {
                       </Text>
                       {itemsInCategory.map((item) => {
                         const today = new Date();
-                        const expiry = new Date(item.expiryDate);
+                        const expiry = new Date(item.ExpiryDate);
 
                         const diffTime = expiry - today;
                         const daysLeft = Math.ceil(
@@ -434,7 +437,7 @@ export default function Home() {
                           <ExpiringWidget
                             key={item.id}
                             image={require("../assets/foodplaceholders/mschicken.png")}
-                            name={item.name}
+                            name={item.IngredientName}
                             expireMessage={`This item is expiring in ${daysLeft} days!`}
                             expiringIn={`${daysLeft} days`}
                             dateStyling={{
@@ -455,16 +458,16 @@ export default function Home() {
               ) : category === "Expiry date" ? (
                 sortedItems.map((item) => {
                   const today = new Date();
-                  const expiry = new Date(item.expiryDate);
+                  const expiry = new Date(item.ExpiryDate);
 
                   const diffTime = expiry - today;
                   const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
                   return (
                     <ExpiringWidget
-                      key={item.id}
+                      key={item._id}
                       image={require("../assets/foodplaceholders/mschicken.png")}
-                      name={item.name}
+                      name={item.IngredientName}
                       expireMessage={`This item is expiring in ${daysLeft} days!`}
                       expiringIn={`${daysLeft} days`}
                       dateStyling={{
