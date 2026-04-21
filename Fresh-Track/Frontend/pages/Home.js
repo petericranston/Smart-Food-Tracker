@@ -122,6 +122,14 @@ export default function Home() {
       setIsRegistering(false);
       setPassword("");
       setUsername(data.username);
+
+      const ingredientsResponse = await fetch(`${API_URL}/api/getIngredients`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: data.username }),
+      });
+      const ingredientsData = await ingredientsResponse.json();
+      if (ingredientsResponse.ok) setAllIngredients(ingredientsData);
     } catch (error) {
       console.log("Failed to login", error);
     }
