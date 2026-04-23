@@ -18,8 +18,15 @@ import { useState, useEffect } from "react";
 import ReceiptScanner from "../components/ReceiptScanner";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
+  dangerouslyAllowBrowser: true,
+});
 
 export default function AddItems() {
+  const [username, setUsername] = useState("");
   useEffect(() => {
     const loadUser = async () => {
       const savedUsername = await AsyncStorage.getItem("username");
@@ -27,6 +34,9 @@ export default function AddItems() {
     };
     loadUser();
   }, []);
+
+  const today = new Date();
+  const currentDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
   const insets = useSafeAreaInsets();
@@ -86,18 +96,141 @@ export default function AddItems() {
   }
 
   async function addIngredientToPantry(ingredientName) {
-    setScannedItems((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        name: ingredientName,
-        expiryDate: "2026-05-28",
-        foodQuantity: 1,
-        unit: null,
-        foodGroup: "Protein",
-        storageState: null,
-      },
-    ]);
+    const PROMPT = `You are a deterministic food classification engine.
+
+    Task:
+    You will be given a single ingredient name. Return ONLY one valid JSON object matching the exact schema below.
+    The ingredient name is: ${ingredientName}
+
+    Hard requirements:
+    - Output JSON only
+    - No markdown
+    - No explanations
+    - No extra text
+    - No extra keys
+    - If a value is missing, use null
+
+    Current date:
+    - currentDate = ${currentDate}
+    - All date estimates must be calculated from currentDate
+
+    Classification rules:
+    For the ingredient, determine:
+    1. "food_group"
+    2. "storage_state"
+    3. "predicted_expiry_date"
+    4. "expiration_date_rating"
+
+    Allowed values for "food_group":
+    - "meat"
+    - "dairy"
+    - "fruit"
+    - "vegetable"
+    - "beverage"
+    - "bakery"
+    - "frozen"
+    - "pantry"
+    - "snack"
+    - "prepared food"
+    - "seafood"
+
+    Allowed values for "storage_state":
+    - "frozen"
+    - "chilled"
+    - "ambient"
+    - null
+
+    Critical storage-state rules:
+    - If the ingredient name clearly suggests frozen storage, set "storage_state" to "frozen"
+    - Frozen wording or strong frozen clues override fresh produce logic
+    - Examples of strong frozen clues include: frozen, fries, chips, wedges, hash browns, ice cream, frozen pizza, frozen vegetables, frozen ready meals
+    - If "storage_state" is "frozen", do NOT estimate expiry using fresh vegetable, bakery, or chilled rules
+    - Frozen foods should usually have expiration estimates in weeks to months, not days
+
+    Critical unopened storage assumption:
+    - Assume every product is unopened
+    - Assume every product is stored correctly in its proper place
+    - For chilled items, assume correct refrigeration
+    - For frozen items, assume correct freezer storage
+    - For ambient items, assume normal cupboard or pantry storage
+    - Estimate shelf life based on unopened products stored correctly, not opened products
+    - Do NOT shorten expiry because of opened-package assumptions
+    - Prefer typical manufacturer unopened shelf life over opened-at-home usage life
+    - For products like cream, yoghurt, cheese, butter, sauces, and packaged dairy, assume unopened refrigerated shelf life
+
+    Expiry rules:
+    - "predicted_expiry_date" must be exactly one date in YYYY-MM-DD format or null
+    - Estimate from currentDate
+    - If no reliable estimate is possible, use null
+    - Always be conservative
+    - Always subtract 1 day from the chosen shelf-life estimate
+    - Conservative does NOT mean unrealistically short; use realistic unopened shelf life for correctly stored products
+
+    Shelf-life estimation rules:
+    - Fresh meat or seafood: 1-3 days
+    - Packaged meat: 5-7 days
+    - Milk and fresh dairy: 5-7 days
+    - Double cream, whipping cream, single cream, and similar unopened chilled cream products: often substantially longer than fresh milk; use a realistic unopened chilled estimate, often weeks rather than days
+    - Yoghurts and many unopened chilled dairy products often last longer than milk; do not force them into very short milk-style estimates
+    - Hard cheese: often weeks if unopened and refrigerated
+    - Processed cheese and cheese spread: moderate to long shelf life if unopened
+    - Butter and margarine: usually weeks if unopened and stored correctly
+    - Bread and fresh bakery: 3-5 days
+    - Fresh fruit and vegetables: 3-10 days
+    - Frozen foods of any kind: weeks to months, not days
+    - Pantry foods, snacks, chocolate, tinned goods, water, and shelf-stable beverages: weeks to months
+    - If unclear, prefer a safer but still category-correct estimate
+    - Avoid unrealistically early expiry dates for unopened packaged products
+
+    Expiration rating rules:
+    - "green" = long shelf life or highly reliable estimate
+    - "yellow" = moderate shelf life
+    - "red" = short shelf life, high risk, or uncertain classification
+
+    Final checks:
+    - Make sure frozen products are not given a short fresh-food expiry
+    - Make sure unopened packaged dairy and chilled products are not given unrealistically short expiry dates
+
+    Return exactly this JSON schema shape and nothing else:
+    {
+      "food_group": null,
+      "storage_state": null,
+      "predicted_expiry_date": null,
+      "expiration_date_rating": null
+    }
+    `;
+
+    try {
+      const result = await openai.chat.completions.create({
+        model: "gpt-4o",
+        temperature: 0,
+        max_tokens: 1000,
+        messages: [
+          {
+            role: "user",
+            content: PROMPT,
+          },
+        ],
+      });
+
+      const parsedResults = JSON.parse(result.choices[0].message.content);
+      console.log(parsedResults);
+      setScannedItems((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          name: ingredientName,
+          expiryDate: parsedResults.predicted_expiry_date,
+          foodQuantity: 1,
+          unit: null,
+          foodGroup: parsedResults.food_group,
+          storageState: parsedResults.storage_state,
+        },
+      ]);
+    } catch (error) {
+      console.log("OpenAI error:", JSON.stringify(error)); // more detail than just error
+    }
+
     setSearchVisible(false);
   }
 

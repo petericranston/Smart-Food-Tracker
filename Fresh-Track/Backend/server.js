@@ -23,10 +23,6 @@ app.get("/", (request, response) => {
   response.send("Backend running");
 });
 
-app.get("/api/data", async (request, response) => {
-  response.json({ message: "hello" });
-});
-
 app.post("/api/register", async (request, response) => {
   const { username, password } = request.body;
   const user = await database.newUser(username, password, []); // empty array for ingredients

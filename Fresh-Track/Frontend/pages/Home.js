@@ -57,32 +57,22 @@ export default function Home() {
     }, []),
   );
 
-  const dummyItems = [
-    "chicken",
-    "beef",
-    "yogurt",
-    "milk",
-    "eggs",
-    "broccoli",
-    "apples",
-    "mango",
-    "cake",
-    "cream",
-    "protein shake",
-    "mayo",
-    "bread",
-  ];
-  const dummyExpiring = [
-    { id: 1, name: "chicken", expiryDate: "2026-04-18", category: "Protein" },
-    { id: 2, name: "milk", expiryDate: "2026-04-20", category: "Dairy" },
-    { id: 3, name: "eggs", expiryDate: "2026-05-20", category: "Protein" },
-  ];
-
   // for the inventory dropdown
   const [category, setCategory] = useState("All items");
   const dropCategories = ["All items", "Expiry date"];
-  const foodCategories = ["Dairy", "Protein", "Fruit", "Vegetables"];
-
+  const foodCategories = [
+    "meat",
+    "dairy",
+    "fruit",
+    "vegetable",
+    "beverage",
+    "bakery",
+    "frozen",
+    "pantry",
+    "snack",
+    "prepared food",
+    "seafood",
+  ];
   const sortedItems = [...AllIngredients].sort(
     (a, b) => new Date(a.expiryDate) - new Date(b.expiryDate),
   );
