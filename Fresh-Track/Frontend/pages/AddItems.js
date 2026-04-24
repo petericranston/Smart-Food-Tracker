@@ -308,7 +308,7 @@ export default function AddItems() {
             padding: 15,
             borderColor: "#B5B5B550",
             borderWidth: 2,
-            maxHeight: 300,
+            maxHeight: 200,
             minHeight: 50,
           }}
         >
