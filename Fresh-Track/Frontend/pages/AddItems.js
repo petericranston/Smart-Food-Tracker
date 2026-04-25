@@ -360,7 +360,6 @@ export default function AddItems() {
         onRequestClose={() => setReceiptVisible(false)}
       >
         <View style={[styles.modalContainer, { paddingTop: insets.top + 15 }]}>
-          {" "}
           {/* insets stop the modal going to the top when first running 
         the app for some reason safearea view doesn't work properly */}
           <TouchableOpacity
