@@ -1,10 +1,8 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
-import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 
-export default function RecipesWidget({ dishEmoji, dishName, dishTime, pplServed, numIngredients }){
-    const [saved, setSaved] = useState(false);
+export default function RecipesWidget({ dishEmoji, dishName, dishTime, pplServed, numIngredients, isSaved, onToggleSave }){
 
     return(
         <View style={{borderWidth: 1, marginTop: 30, width: "95%", borderRadius: 20}}>
@@ -19,11 +17,11 @@ export default function RecipesWidget({ dishEmoji, dishName, dishTime, pplServed
             <View style={{padding: 15}}>
                 <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10}}>
                     <Text style={{fontSize: RFValue(16), fontFamily: "Inter_300Light",}}>{dishName}</Text>
-                    <TouchableOpacity onPress={() => setSaved(!saved)}>
+                    <TouchableOpacity onPress={onToggleSave}>
                         <Ionicons
-                            name={saved ? "heart" : "heart-outline"}
+                            name={isSaved ? "heart" : "heart-outline"}
                             size={30}
-                            color={saved ? "#ff4444" : "#000"}
+                            color={isSaved ? "#ff4444" : "#000"}
                         />
                         </TouchableOpacity>
                 </View>
