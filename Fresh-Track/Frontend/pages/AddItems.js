@@ -38,7 +38,7 @@ export default function AddItems() {
   const today = new Date();
   const currentDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
-  const API_URL = process.env.EXPO_PUBLIC_API_URL;
+  const API_URL = 'http://192.168.1.243:3001';
   const insets = useSafeAreaInsets();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -513,18 +513,18 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    backgroundColor: "#1a1d27",
+    backgroundColor: "#7E9E7450",
     borderWidth: 1,
     borderColor: "#2a2d3a",
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    color: "#ffffff",
-    fontSize: 15,
+    color: "#000",
+    fontSize: RFValue(12),
     marginRight: 10,
   },
   searchBtn: {
-    backgroundColor: "#4ade80",
+    backgroundColor: "#50863F",
     borderRadius: 12,
     paddingHorizontal: 18,
     paddingVertical: 12,
@@ -532,16 +532,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   searchBtnText: {
-    color: "#0f1117",
-    fontWeight: "700",
-    fontSize: 14,
+    color: "#F8F5EC",
+    fontFamily: "Inter_700Bold",
+    fontSize: RFValue(12),
   },
   results: {
     flex: 1,
     paddingHorizontal: 16,
   },
   resultCard: {
-    backgroundColor: "#1a1d27",
+    backgroundColor: "#F8F5EC",
     borderRadius: 14,
     padding: 14,
     marginBottom: 12,
@@ -564,44 +564,44 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   productName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#ffffff",
+    fontSize: RFValue(13),
+    fontFamily: "Inter_600SemiBold",
+    color: "#000",
     marginBottom: 4,
   },
   productBrand: {
-    fontSize: 13,
+    fontSize: RFValue(11),
     color: "#6b7280",
   },
   saveBtn: {
-    backgroundColor: "#16a34a",
+    backgroundColor: "#50863F",
     borderRadius: 8,
     paddingVertical: 10,
     alignItems: "center",
   },
   saveBtnText: {
-    color: "#ffffff",
-    fontWeight: "600",
-    fontSize: 14,
+    color: "#F8F5EC",
+    fontFamily: "Inter_600SemiBold",
+    fontSize: RFValue(14),
   },
   saveItems: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: "#16a34a",
+    backgroundColor: "#50863F",
     marginTop: 16,
     marginHorizontal: 40,
     paddingVertical: 14,
     borderRadius: 14,
-    shadowColor: "#16a34a",
+    shadowColor: "#000000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
     shadowRadius: 8,
     elevation: 6,
   },
   saveItemsText: {
-    color: "#ffffff",
+    color: "#F8F5EC",
     fontSize: RFValue(15),
     fontFamily: "Inter_600SemiBold",
     letterSpacing: 0.5,
