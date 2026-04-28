@@ -214,7 +214,6 @@ export default function AddItems() {
       });
 
       const parsedResults = JSON.parse(result.choices[0].message.content);
-      console.log(parsedResults);
       setScannedItems((prev) => [
         ...prev,
         {

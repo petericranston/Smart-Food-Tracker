@@ -39,7 +39,6 @@ app.post("/api/login", async (request, response) => {
     request.body.username,
     request.body.password,
   );
-  console.log(user);
 
   if (user) {
     response.json({ success: true, username: user.Username });
@@ -50,9 +49,7 @@ app.post("/api/login", async (request, response) => {
 
 app.post("/api/searchProduct", async (request, response) => {
   const search = request.body.searchQuery;
-  console.log(search);
   const results = await searchAPI.SearchProduct(search);
-  console.log(results);
   response.json(results);
 });
 
