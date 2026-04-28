@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 
 const { Schema, model } = mongoose;
 
@@ -21,11 +22,13 @@ const userData = model("users", userSchema);
 
 async function newUser(username, password, ingredients) {
   //New user function
+  const hashedPassword = await bcrypt.hash(password, 10); // Encrypting
+
   try {
     const user = await userData.create({
       //Creating new user on mongodb
       Username: username,
-      Password: password,
+      Password: hashedPassword,
       Ingredients: ingredients,
     });
     return user;
@@ -82,8 +85,12 @@ async function checkUser(username, password) {
   //Finding user
   const user = await userData.findOne({
     Username: username,
-    Password: password,
   });
+  if (!user) return null;
+
+  const match = await bcrypt.compare(password, user.Password); //Decrypting
+  if (!match) return null;
+
   return user;
 }
 

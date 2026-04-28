@@ -251,7 +251,6 @@ export default function AddItems() {
       });
       const data = await response.json();
       if (!response.ok) return;
-      console.log("Ingredient saved!", data);
       setScannedItems([]);
     } catch (error) {
       console.log("Error saving ingredient", error);
