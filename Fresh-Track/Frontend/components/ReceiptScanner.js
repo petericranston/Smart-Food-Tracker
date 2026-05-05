@@ -296,6 +296,7 @@ export default function ReceiptScanner({ onScanComplete }) {
         </TouchableOpacity>
       )}
 
+
       {receipt && (
         <View style={styles.jsonContainer}>
           <Text style={styles.jsonLabel}>RAW JSON RESPONSE</Text>
@@ -387,3 +388,4 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 });
+
