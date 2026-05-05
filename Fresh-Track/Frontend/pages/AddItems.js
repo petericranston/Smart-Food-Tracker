@@ -14,7 +14,7 @@ import { RFValue } from "react-native-responsive-fontsize";
 import ItemInput from "../components/ItemInput";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Feather from "@expo/vector-icons/Feather";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ReceiptScanner from "../components/ReceiptScanner";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -57,6 +57,7 @@ export default function AddItems() {
   const [barcodeProduct, setBarcodeProduct] = useState(null);
   const [barcodeLoading, setBarcodeLoading] = useState(false);
   const [barcodeError, setBarcodeError] = useState(null);
+  const scanLock = useRef(false);
 
   const formatExpiry = (expiryDate) => {
     if (!expiryDate) return "-/-";
@@ -104,7 +105,8 @@ export default function AddItems() {
   }
 
   async function handleBarcodeScan({ data }) {
-    if (scanned) return;
+    if (scanLock.current) return;
+    scanLock.current = true;  // blocks instantly, no async delay
     setScanned(true);
     setBarcodeLoading(true);
     setBarcodeError(null);
@@ -131,6 +133,7 @@ export default function AddItems() {
   }
 
   function resetBarcodeModal() {
+    scanLock.current = false;  // reset the lock too
     setScanned(false);
     setBarcodeProduct(null);
     setBarcodeError(null);
