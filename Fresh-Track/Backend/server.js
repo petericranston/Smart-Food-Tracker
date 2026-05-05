@@ -53,7 +53,7 @@ app.post("/api/searchProduct", async (request, response) => {
   response.json(results);
 });
 
-app.post('/api/getProductByBarcode', async (req, res) => {
+app.post("/api/getProductByBarcode", async (req, res) => {
   const { barcode } = req.body;
   const product = await GetProductByBarcode(barcode);
   if (!product) return res.json(null);
