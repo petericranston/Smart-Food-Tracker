@@ -19,7 +19,7 @@ import ReceiptScanner from "../components/ReceiptScanner";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import OpenAI from "openai";
-import { CameraView, useCameraPermissions } from 'expo-camera';
+import { CameraView, useCameraPermissions } from "expo-camera";
 
 const openai = new OpenAI({
   apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
@@ -106,15 +106,15 @@ export default function AddItems() {
 
   async function handleBarcodeScan({ data }) {
     if (scanLock.current) return;
-    scanLock.current = true;  // blocks instantly, no async delay
+    scanLock.current = true; // blocks instantly, no async delay
     setScanned(true);
     setBarcodeLoading(true);
     setBarcodeError(null);
 
     try {
       const response = await fetch(`${API_URL}/api/getProductByBarcode`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ barcode: data }),
       });
       const product = await response.json();
@@ -133,7 +133,7 @@ export default function AddItems() {
   }
 
   function resetBarcodeModal() {
-    scanLock.current = false;  // reset the lock too
+    scanLock.current = false; // reset the lock too
     setScanned(false);
     setBarcodeProduct(null);
     setBarcodeError(null);
@@ -458,11 +458,13 @@ export default function AddItems() {
               <Text style={barcodeStyles.permissionText}>
                 Camera access is needed to scan barcodes
               </Text>
-              <TouchableOpacity style={styles.saveBtn} onPress={requestPermission}>
+              <TouchableOpacity
+                style={styles.saveBtn}
+                onPress={requestPermission}
+              >
                 <Text style={styles.saveBtnText}>Grant Permission</Text>
               </TouchableOpacity>
             </View>
-
           ) : !scanned ? (
             /* Camera view */
             <View style={barcodeStyles.cameraWrapper}>
@@ -470,33 +472,53 @@ export default function AddItems() {
                 style={StyleSheet.absoluteFillObject}
                 facing="back"
                 onBarcodeScanned={handleBarcodeScan}
-                barcodeScannerSettings={{ barcodeTypes: ["ean13", "ean8", "upc_a", "upc_e"] }}
+                barcodeScannerSettings={{
+                  barcodeTypes: ["ean13", "ean8", "upc_a", "upc_e"],
+                }}
               />
               {/* Viewfinder overlay */}
               <View style={barcodeStyles.overlay}>
                 <View style={barcodeStyles.viewfinder}>
                   <View style={[barcodeStyles.corner, barcodeStyles.topLeft]} />
-                  <View style={[barcodeStyles.corner, barcodeStyles.topRight]} />
-                  <View style={[barcodeStyles.corner, barcodeStyles.bottomLeft]} />
-                  <View style={[barcodeStyles.corner, barcodeStyles.bottomRight]} />
+                  <View
+                    style={[barcodeStyles.corner, barcodeStyles.topRight]}
+                  />
+                  <View
+                    style={[barcodeStyles.corner, barcodeStyles.bottomLeft]}
+                  />
+                  <View
+                    style={[barcodeStyles.corner, barcodeStyles.bottomRight]}
+                  />
                 </View>
-                <Text style={barcodeStyles.overlayHint}>Align barcode within the frame</Text>
+                <Text style={barcodeStyles.overlayHint}>
+                  Align barcode within the frame
+                </Text>
               </View>
             </View>
-
           ) : barcodeLoading ? (
             /* Loading state */
             <View style={barcodeStyles.centreBox}>
-              <Text style={barcodeStyles.loadingText}>Looking up product...</Text>
+              <Text style={barcodeStyles.loadingText}>
+                Looking up product...
+              </Text>
             </View>
-
           ) : barcodeError ? (
             /* Error / not found state */
             <View style={barcodeStyles.centreBox}>
               <Ionicons name="alert-circle-outline" size={48} color="#888" />
               <Text style={barcodeStyles.permissionText}>{barcodeError}</Text>
-              <TouchableOpacity style={styles.saveBtn} onPress={resetBarcodeModal}>
-                <Text style={[styles.saveBtnText, { paddingLeft: 10, paddingRight: 10 }]}>Scan Again</Text>
+              <TouchableOpacity
+                style={styles.saveBtn}
+                onPress={resetBarcodeModal}
+              >
+                <Text
+                  style={[
+                    styles.saveBtnText,
+                    { paddingLeft: 10, paddingRight: 10 },
+                  ]}
+                >
+                  Scan Again
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.saveBtn, barcodeStyles.secondaryBtn]}
@@ -506,10 +528,11 @@ export default function AddItems() {
                   setSearchVisible(true);
                 }}
               >
-                <Text style={[styles.saveBtnText, { color: "#50863F" }]}>Search Manually</Text>
+                <Text style={[styles.saveBtnText, { color: "#50863F" }]}>
+                  Search Manually
+                </Text>
               </TouchableOpacity>
             </View>
-
           ) : barcodeProduct ? (
             /* Product found state */
             <View style={barcodeStyles.productBox}>
@@ -522,9 +545,13 @@ export default function AddItems() {
               <View style={styles.resultCard}>
                 <View style={styles.resultRow}>
                   <View style={styles.productInfo}>
-                    <Text style={styles.productName}>{barcodeProduct.name}</Text>
+                    <Text style={styles.productName}>
+                      {barcodeProduct.name}
+                    </Text>
                     {barcodeProduct.brand && (
-                      <Text style={styles.productBrand}>{barcodeProduct.brand}</Text>
+                      <Text style={styles.productBrand}>
+                        {barcodeProduct.brand}
+                      </Text>
                     )}
                   </View>
                 </View>
@@ -539,8 +566,13 @@ export default function AddItems() {
                   <Text style={styles.saveBtnText}>+ Add to Pantry</Text>
                 </TouchableOpacity>
               </View>
-              <TouchableOpacity onPress={resetBarcodeModal} style={barcodeStyles.scanAgainLink}>
-                <Text style={barcodeStyles.scanAgainText}>Scan a different product</Text>
+              <TouchableOpacity
+                onPress={resetBarcodeModal}
+                style={barcodeStyles.scanAgainLink}
+              >
+                <Text style={barcodeStyles.scanAgainText}>
+                  Scan a different product
+                </Text>
               </TouchableOpacity>
             </View>
           ) : null}
@@ -752,55 +784,55 @@ const barcodeStyles = StyleSheet.create({
     marginHorizontal: 16,
     height: 280,
     borderRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 1,
-    borderColor: '#2a2d3a',
+    borderColor: "#2a2d3a",
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     gap: 16,
   },
   viewfinder: {
     width: 220,
     height: 120,
-    position: 'relative',
+    position: "relative",
   },
   corner: {
-    position: 'absolute',
+    position: "absolute",
     width: 20,
     height: 20,
-    borderColor: '#F8F5EC',
+    borderColor: "#F8F5EC",
     borderWidth: 3,
   },
-  topLeft:     { top: 0, left: 0,  borderRightWidth: 0, borderBottomWidth: 0 },
-  topRight:    { top: 0, right: 0, borderLeftWidth: 0,  borderBottomWidth: 0 },
-  bottomLeft:  { bottom: 0, left: 0,  borderRightWidth: 0, borderTopWidth: 0 },
-  bottomRight: { bottom: 0, right: 0, borderLeftWidth: 0,  borderTopWidth: 0 },
+  topLeft: { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0 },
+  topRight: { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0 },
+  bottomLeft: { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0 },
+  bottomRight: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0 },
   overlayHint: {
-    color: '#F8F5EC',
+    color: "#F8F5EC",
     fontSize: RFValue(12),
-    fontFamily: 'Inter_500Medium',
-    textAlign: 'center',
+    fontFamily: "Inter_500Medium",
+    textAlign: "center",
   },
   centreBox: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     gap: 16,
     paddingHorizontal: 30,
   },
   permissionText: {
     fontSize: RFValue(13),
-    color: '#707070',
-    fontFamily: 'Inter_500Medium',
-    textAlign: 'center',
+    color: "#707070",
+    fontFamily: "Inter_500Medium",
+    textAlign: "center",
   },
   loadingText: {
     fontSize: RFValue(14),
-    color: '#707070',
-    fontFamily: 'Inter_500Medium',
+    color: "#707070",
+    fontFamily: "Inter_500Medium",
   },
   productBox: {
     flex: 1,
@@ -811,24 +843,24 @@ const barcodeStyles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 12,
-    alignSelf: 'center',
+    alignSelf: "center",
     marginBottom: 16,
-    backgroundColor: '#0f1117',
+    backgroundColor: "#0f1117",
   },
   secondaryBtn: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     borderWidth: 1,
-    borderColor: '#50863F',
-    padding: 10
+    borderColor: "#50863F",
+    padding: 10,
   },
   scanAgainLink: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 16,
   },
   scanAgainText: {
-    color: '#50863F',
+    color: "#50863F",
     fontSize: RFValue(13),
-    fontFamily: 'Inter_500Medium',
-    textDecorationLine: 'underline',
+    fontFamily: "Inter_500Medium",
+    textDecorationLine: "underline",
   },
 });
