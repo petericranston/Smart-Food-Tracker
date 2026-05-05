@@ -25,7 +25,7 @@ app.get("/", (request, response) => {
 
 app.post("/api/register", async (request, response) => {
   const { username, password } = request.body;
-  const user = await database.newUser(username, password, []); // empty array for ingredients
+  const user = await database.newUser(username, password, [], []); // empty array for ingredients and saved recipes
 
   if (!user)
     return response.status(500).json({ error: "Failed to create user" });
@@ -43,7 +43,7 @@ app.post("/api/login", async (request, response) => {
   if (user) {
     response.json({ success: true, username: user.Username });
   } else {
-    console.log("Login Failed");
+    response.status(401).json({ success: false, error: "Invalid credentials" });
   }
 });
 

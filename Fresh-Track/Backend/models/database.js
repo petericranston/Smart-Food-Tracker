@@ -3,6 +3,23 @@ const bcrypt = require("bcrypt");
 
 const { Schema, model } = mongoose;
 
+const recipeIngredientsSchema = new Schema({
+  ingredient: String,
+
+const recipeStepsSchema = new Schema({
+  step: String,
+});
+
+const recipeSchema = new Schema({
+  dishEmoji: String,
+  name: String,
+  time: String,
+  serves: Number,
+  ingredientsNum: Number,
+  ingredientsList: [recipeIngredientsSchema],
+  steps: [recipeStepsSchema],
+});
+
 const ingredientSchema = new Schema({
   IngredientName: { type: String, required: true },
   ExpiryDate: { type: Date, default: null },
@@ -16,20 +33,21 @@ const userSchema = new Schema({
   Username: { type: String, unique: true },
   Password: String,
   Ingredients: [ingredientSchema],
+  savedRecipes: [recipeSchema],
 });
 
 const userData = model("users", userSchema);
 
-async function newUser(username, password, ingredients) {
+async function newUser(username, password, ingredients, savedRecipes) {
   //New user function
-  const hashedPassword = await bcrypt.hash(password, 10); // Encrypting
-
   try {
+    const hashedPassword = await bcrypt.hash(password, 10); // Encrypting
     const user = await userData.create({
       //Creating new user on mongodb
       Username: username,
       Password: hashedPassword,
       Ingredients: ingredients,
+      savedRecipes: savedRecipes,
     });
     return user;
   } catch (err) {

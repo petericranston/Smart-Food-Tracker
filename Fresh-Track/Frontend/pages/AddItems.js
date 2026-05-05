@@ -38,7 +38,7 @@ export default function AddItems() {
   const today = new Date();
   const currentDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
-  const API_URL = "http://192.168.1.243:3001";
+  const API_URL = process.env.EXPO_PUBLIC_API_URL;
   const insets = useSafeAreaInsets();
 
   const [searchQuery, setSearchQuery] = useState("");
