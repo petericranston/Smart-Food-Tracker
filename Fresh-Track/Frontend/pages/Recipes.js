@@ -19,9 +19,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function Recipes() {
   const insets = useSafeAreaInsets();
   const [savedVisible, setSavedVisible] = useState(false);
-  const [savedNames, setSavedNames] = useState(new Set());
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [username, setUsername] = useState("");
+
+  const [savedRecipes, setSavedRecipes] = useState([]);
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -101,15 +102,16 @@ export default function Recipes() {
     },
   ];
 
-  const toggleSaved = (name) => {
-    setSavedNames((prev) => {
-      const updated = new Set(prev);
-      updated.has(name) ? updated.delete(name) : updated.add(name);
-      return updated;
+  const toggleSaved = (item) => {
+    setSavedRecipes((prev) => {
+      const exists = prev.find((r) => r.name === item.name);
+      if (exists) {
+        return prev.filter((r) => r.name !== item.name);
+      } else {
+        return [...prev, item];
+      }
     });
   };
-
-  const savedDishes = dummyDishes.filter((item) => savedNames.has(item.name));
 
   async function saveRecipe(savedRecipe) {
     try {
@@ -172,11 +174,12 @@ export default function Recipes() {
                 dishName={item.name}
                 dishTime={item.time}
                 pplServed={item.serves}
-                numIngredients={item.ingredients}
-                isSaved={savedNames.has(item.name)}
+                numIngredients={item.ingredientsNum}
+                isSaved={savedRecipes.some((r) => r.name === item.name)}
                 onToggleSave={() => {
-                  toggleSaved(item.name);
-                  if (!savedNames.has(item.name)) saveRecipe(item); // only save, don't unsave
+                  toggleSaved(item);
+                  if (!savedRecipes.some((r) => r.name === item.name))
+                    saveRecipe(item);
                 }}
                 onPress={() => setSelectedRecipe(item)}
               />
@@ -204,17 +207,17 @@ export default function Recipes() {
             <Text style={[styles.h1, { marginBottom: 5 }]}>Saved Recipes</Text>
 
             <View style={{ alignItems: "center" }}>
-              {savedDishes.length > 0 ? (
-                savedDishes.map((item) => (
+              {savedRecipes.length > 0 ? (
+                savedRecipes.map((item) => (
                   <RecipesWidget
                     key={item.name}
                     dishEmoji={item.dishEmoji}
                     dishName={item.name}
                     dishTime={item.time}
                     pplServed={item.serves}
-                    numIngredients={item.ingredients}
+                    numIngredients={item.ingredientsNum}
                     isSaved={true}
-                    onToggleSave={() => toggleSaved(item.name)}
+                    onToggleSave={() => toggleSaved(item)}
                     onPress={() => {
                       setSavedVisible(false);
                       setTimeout(() => setSelectedRecipe(item), 300);
