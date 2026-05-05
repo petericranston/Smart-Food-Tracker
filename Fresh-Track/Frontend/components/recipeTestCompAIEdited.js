@@ -1,74 +1,75 @@
-import OpenAI from 'openai';
-import { useState } from 'react';
+import OpenAI from "openai";
+import { useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
-    StyleSheet
-} from 'react-native';
-import { RFValue } from 'react-native-responsive-fontsize';
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+  StyleSheet,
+} from "react-native";
+import { RFValue } from "react-native-responsive-fontsize";
 
-const openai = new OpenAI({
+export default function RecipeTestCompAIEdited({ onRecipeGeneration }) {
+  const openai = new OpenAI({
     apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
     dangerouslyAllowBrowser: true,
-});
+  });
 
-const ingredients = [
-    { name: 'chicken breast', expiryDate: '2026-04-22' },
-    { name: 'minced beef', expiryDate: '2026-04-23' },
-    { name: 'salmon fillet', expiryDate: '2026-04-24' },
+  const ingredients = [
+    { name: "chicken breast", expiryDate: "2026-04-22" },
+    { name: "minced beef", expiryDate: "2026-04-23" },
+    { name: "salmon fillet", expiryDate: "2026-04-24" },
 
-    { name: 'milk', expiryDate: '2026-04-22' },
-    { name: 'cheddar cheese', expiryDate: '2026-04-28' },
-    { name: 'double cream', expiryDate: '2026-04-25' },
+    { name: "milk", expiryDate: "2026-04-22" },
+    { name: "cheddar cheese", expiryDate: "2026-04-28" },
+    { name: "double cream", expiryDate: "2026-04-25" },
 
-    { name: 'pasta', expiryDate: '2026-06-01' },
-    { name: 'rice', expiryDate: '2026-07-10' },
-    { name: 'bread', expiryDate: '2026-04-21' },
+    { name: "pasta", expiryDate: "2026-06-01" },
+    { name: "rice", expiryDate: "2026-07-10" },
+    { name: "bread", expiryDate: "2026-04-21" },
 
-    { name: 'spinach', expiryDate: '2026-04-22' },
-    { name: 'broccoli', expiryDate: '2026-04-23' },
-    { name: 'bell pepper', expiryDate: '2026-04-24' },
+    { name: "spinach", expiryDate: "2026-04-22" },
+    { name: "broccoli", expiryDate: "2026-04-23" },
+    { name: "bell pepper", expiryDate: "2026-04-24" },
 
-    { name: 'eggs', expiryDate: '2026-05-02' },
-    { name: 'butter', expiryDate: '2026-05-10' }
-];
+    { name: "eggs", expiryDate: "2026-05-02" },
+    { name: "butter", expiryDate: "2026-05-10" },
+  ];
 
-function formatDateDDMMYYYY(date = new Date()) {
-    const dd = String(date.getDate()).padStart(2, '0');
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
+  function formatDateDDMMYYYY(date = new Date()) {
+    const dd = String(date.getDate()).padStart(2, "0");
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
     const yyyy = date.getFullYear();
     return `${dd}-${mm}-${yyyy}`;
-}
+  }
 
-function parseDDMMYYYY(dateStr) {
-    const [dd, mm, yyyy] = dateStr.split('-');
+  function parseDDMMYYYY(dateStr) {
+    const [dd, mm, yyyy] = dateStr.split("-");
     return new Date(`${yyyy}-${mm}-${dd}`);
-}
+  }
 
-function sortByExpiry(items) {
+  function sortByExpiry(items) {
     return [...items].sort(
-        (a, b) => parseDDMMYYYY(a.expiryDate) - parseDDMMYYYY(b.expiryDate)
+      (a, b) => parseDDMMYYYY(a.expiryDate) - parseDDMMYYYY(b.expiryDate),
     );
-}
+  }
 
-function safeParseJson(text) {
+  function safeParseJson(text) {
     try {
-        return JSON.parse(text);
+      return JSON.parse(text);
     } catch {
-        const cleaned = text.replace(/```json|```/g, '').trim();
-        return JSON.parse(cleaned);
+      const cleaned = text.replace(/```json|```/g, "").trim();
+      return JSON.parse(cleaned);
     }
-}
+  }
 
-const currentDate = formatDateDDMMYYYY();
-const recipeCount = 3;
-const sortedIngredients = sortByExpiry(ingredients);
+  const currentDate = formatDateDDMMYYYY();
+  const recipeCount = 3;
+  const sortedIngredients = sortByExpiry(ingredients);
 
-const PROMPT = `
+  const PROMPT = `
 You are a professional chef making recipe suggestions for users.
 
 You will be given a list of ingredients, each with an expiry date.
@@ -141,165 +142,164 @@ Ingredients:
 ${JSON.stringify(sortedIngredients, null, 2)}
 `;
 
-const getRecipe = async () => {
+  const getRecipe = async () => {
     try {
-        const result = await openai.chat.completions.create({
-            model: 'gpt-4o',
-            temperature: 0,
-            max_tokens: 1000,
-            messages: [
-                {
-                    role: 'user',
-                    content: PROMPT,
-                },
-            ],
-        });
+      const result = await openai.chat.completions.create({
+        model: "gpt-4o",
+        temperature: 0,
+        max_tokens: 1000,
+        messages: [
+          {
+            role: "user",
+            content: PROMPT,
+          },
+        ],
+      });
 
-        const content = result.choices?.[0]?.message?.content;
+      const content = result.choices?.[0]?.message?.content;
 
-        if (!content) {
-            throw new Error('No content returned from OpenAI');
-        }
+      if (!content) {
+        throw new Error("No content returned from OpenAI");
+      }
 
-        const parsedRecipes = safeParseJson(content);
-        console.log("using ingredients from list", parsedRecipes);
+      const parsedRecipes = safeParseJson(content);
+      console.log("using ingredients from list", parsedRecipes);
 
-        return parsedRecipes;
+      return parsedRecipes;
     } catch (err) {
-        Alert.alert('Error', 'Could not generate recipe');
-        console.error(err);
-        return null;
+      Alert.alert("Error", "Could not generate recipe");
+      console.error(err);
+      return null;
     }
-};
+  };
 
-export default function RecipeTestCompAIEdited({ onRecipeGeneration }) {
-    const [loading, setLoading] = useState(false);
-    const [recipes, setRecipes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [recipes, setRecipes] = useState([]);
 
-    const handleTest = async () => {
-        setLoading(true);
-        console.log("BUTTON PRESSED - handleTest started");
-        const data = await getRecipe();
+  const handleTest = async () => {
+    setLoading(true);
+    console.log("BUTTON PRESSED - handleTest started");
+    const data = await getRecipe();
 
-        console.log("Data returned from getRecipe:", data);
-        console.log("onRecipeGeneration prop:", onRecipeGeneration);
+    console.log("Data returned from getRecipe:", data);
+    console.log("onRecipeGeneration prop:", onRecipeGeneration);
 
-        if (data?.recipes) {
-            setRecipes(data.recipes);
-            onRecipeGeneration?.(data.recipes);
-        }
+    if (data?.recipes) {
+      setRecipes(data.recipes);
+      onRecipeGeneration?.(data.recipes);
+    }
 
-        setLoading(false);
-    };
+    setLoading(false);
+  };
 
-    return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.title}>Generate Your Recipes!</Text>
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Generate Your Recipes!</Text>
 
-            <TouchableOpacity
-                style={[styles.btn, loading && styles.btnDisabled]}
-                onPress={handleTest}
-                disabled={loading}
-            >
-                <Text style={styles.btnText}>
-                    {loading ? 'Generating...' : 'Generate Recipe'}
-                </Text>
-            </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.btn, loading && styles.btnDisabled]}
+        onPress={handleTest}
+        disabled={loading}
+      >
+        <Text style={styles.btnText}>
+          {loading ? "Generating..." : "Generate Recipe"}
+        </Text>
+      </TouchableOpacity>
 
-            {loading && <ActivityIndicator size="large" style={styles.loader} />}
+      {loading && <ActivityIndicator size="large" style={styles.loader} />}
 
-            {recipes.map((recipe, index) => (
-                <View key={index} style={styles.recipeCard}>
-                    <Text style={styles.recipeTitle}>{recipe.name}</Text>
-                    <Text style={styles.recipeText}>
-                        Priority Score: {recipe.priorityScore}
-                    </Text>
-                    <Text style={styles.recipeText}>
-                        Estimated Time: {recipe.estimatedTime}
-                    </Text>
+      {recipes.map((recipe, index) => (
+        <View key={index} style={styles.recipeCard}>
+          <Text style={styles.recipeTitle}>{recipe.name}</Text>
+          <Text style={styles.recipeText}>
+            Priority Score: {recipe.priorityScore}
+          </Text>
+          <Text style={styles.recipeText}>
+            Estimated Time: {recipe.estimatedTime}
+          </Text>
 
-                    <Text style={styles.sectionTitle}>Ingredients Used:</Text>
-                    {recipe.ingredientsUsed?.map((item, itemIndex) => (
-                        <Text key={itemIndex} style={styles.recipeText}>
-                            {item.name} ({item.amount}) - {item.expiryDate}
-                        </Text>
-                    ))}
+          <Text style={styles.sectionTitle}>Ingredients Used:</Text>
+          {recipe.ingredientsUsed?.map((item, itemIndex) => (
+            <Text key={itemIndex} style={styles.recipeText}>
+              {item.name} ({item.amount}) - {item.expiryDate}
+            </Text>
+          ))}
 
-                    <Text style={styles.sectionTitle}>Missing Ingredients:</Text>
-                    {recipe.missingIngredients?.length ? (
-                        recipe.missingIngredients.map((item, itemIndex) => (
-                            <Text key={itemIndex} style={styles.recipeText}>
-                                {item.name} ({item.amount})
-                            </Text>
-                        ))
-                    ) : (
-                        <Text style={styles.recipeText}>• None</Text>
-                    )}
+          <Text style={styles.sectionTitle}>Missing Ingredients:</Text>
+          {recipe.missingIngredients?.length ? (
+            recipe.missingIngredients.map((item, itemIndex) => (
+              <Text key={itemIndex} style={styles.recipeText}>
+                {item.name} ({item.amount})
+              </Text>
+            ))
+          ) : (
+            <Text style={styles.recipeText}>• None</Text>
+          )}
 
-                    <Text style={styles.sectionTitle}>Steps:</Text>
-                    {recipe.steps?.map((step, stepIndex) => (
-                        <Text key={stepIndex} style={styles.recipeText}>
-                            {stepIndex + 1}. {step}
-                        </Text>
-                    ))}
-                </View>
-            ))}
-        </ScrollView>
-    );
+          <Text style={styles.sectionTitle}>Steps:</Text>
+          {recipe.steps?.map((step, stepIndex) => (
+            <Text key={stepIndex} style={styles.recipeText}>
+              {stepIndex + 1}. {step}
+            </Text>
+          ))}
+        </View>
+      ))}
+    </ScrollView>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flexGrow: 1,
-        marginTop: 30,
-        padding: 20,
-    },
-    title: {
-        fontSize: RFValue(24),
-        fontFamily: 'Inter_600SemiBold',
-        marginBottom: 16,
-    },
-    btn: {
-        backgroundColor: '#111',
-        padding: 16,
-        borderRadius: 12,
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    btnDisabled: {
-        backgroundColor: '#555',
-    },
-    btnText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    loader: {
-        marginBottom: 20,
-    },
-    recipeCard: {
-        backgroundColor: '#1e1e1e',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 16,
-    },
-    recipeTitle: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: '700',
-        marginBottom: 8,
-    },
-    recipeText: {
-        color: '#d4d4d4',
-        fontSize: 13,
-        lineHeight: 20,
-        marginBottom: 4,
-    },
-    sectionTitle: {
-        color: '#fff',
-        fontSize: 14,
-        fontWeight: '600',
-        marginTop: 10,
-        marginBottom: 6,
-    },
+  container: {
+    flexGrow: 1,
+    marginTop: 30,
+    padding: 20,
+  },
+  title: {
+    fontSize: RFValue(24),
+    fontFamily: "Inter_600SemiBold",
+    marginBottom: 16,
+  },
+  btn: {
+    backgroundColor: "#111",
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  btnDisabled: {
+    backgroundColor: "#555",
+  },
+  btnText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  loader: {
+    marginBottom: 20,
+  },
+  recipeCard: {
+    backgroundColor: "#1e1e1e",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  recipeTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 8,
+  },
+  recipeText: {
+    color: "#d4d4d4",
+    fontSize: 13,
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  sectionTitle: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: 10,
+    marginBottom: 6,
+  },
 });

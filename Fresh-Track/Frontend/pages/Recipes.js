@@ -1,4 +1,3 @@
-
 import {
   Text,
   View,
@@ -16,7 +15,7 @@ import RecipesWidget from "../components/RecipesWidget";
 import RecipeDetail from "../components/RecipeDetail";
 import { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-// import RecipeTestCompAIEdited from "../components/RecipeTestCompAIEdited"
+import RecipeTestCompAIEdited from "../components/recipeTestCompAIEdited";
 
 export default function Recipes() {
   const insets = useSafeAreaInsets();
@@ -268,4 +267,3 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_500Medium",
   },
 });
-
