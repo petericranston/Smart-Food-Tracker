@@ -5,7 +5,7 @@ const dotenv = require("dotenv").config(); //Configuring my .env for secret keys
 const mongoose = require("mongoose");
 
 const app = express();
-const searchAPI = require("./services/api");
+const { SearchProduct, GetProductByBarcode } = require("./services/api");
 const database = require("./models/database");
 
 app.use(cors());
@@ -49,8 +49,15 @@ app.post("/api/login", async (request, response) => {
 
 app.post("/api/searchProduct", async (request, response) => {
   const search = request.body.searchQuery;
-  const results = await searchAPI.SearchProduct(search);
+  const results = await SearchProduct(search);
   response.json(results);
+});
+
+app.post('/api/getProductByBarcode', async (req, res) => {
+  const { barcode } = req.body;
+  const product = await GetProductByBarcode(barcode);
+  if (!product) return res.json(null);
+  res.json(product);
 });
 
 app.post("/api/saveIngredients", async (request, response) => {

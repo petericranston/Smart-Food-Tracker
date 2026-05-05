@@ -103,6 +103,40 @@ export default function AddItems() {
     setSearchQuery("");
   }
 
+  async function handleBarcodeScan({ data }) {
+    if (scanned) return;
+    setScanned(true);
+    setBarcodeLoading(true);
+    setBarcodeError(null);
+
+    try {
+      const response = await fetch(`${API_URL}/api/getProductByBarcode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ barcode: data }),
+      });
+      const product = await response.json();
+
+      if (!product || !product.name) {
+        setBarcodeError("Product not found. Try searching manually.");
+        setBarcodeLoading(false);
+        return;
+      }
+
+      setBarcodeProduct(product);
+    } catch (error) {
+      setBarcodeError("Something went wrong. Try again.");
+    }
+    setBarcodeLoading(false);
+  }
+
+  function resetBarcodeModal() {
+    setScanned(false);
+    setBarcodeProduct(null);
+    setBarcodeError(null);
+    setBarcodeLoading(false);
+  }
+
   async function addIngredientToPantry(ingredientName) {
     const PROMPT = `You are a deterministic food classification engine.
 
@@ -411,7 +445,102 @@ export default function AddItems() {
           >
             <Text style={{ fontSize: 24 }}>✕</Text>
           </TouchableOpacity>
-          <Text>Barcode</Text>
+          <Text style={styles.h1}>Scan Barcode</Text>
+          <Text style={styles.h2}>Point your camera at a product barcode</Text>
+
+          {/* Permission not granted */}
+          {!permission?.granted ? (
+            <View style={barcodeStyles.centreBox}>
+              <Ionicons name="camera-outline" size={48} color="#50863F" />
+              <Text style={barcodeStyles.permissionText}>
+                Camera access is needed to scan barcodes
+              </Text>
+              <TouchableOpacity style={styles.saveBtn} onPress={requestPermission}>
+                <Text style={styles.saveBtnText}>Grant Permission</Text>
+              </TouchableOpacity>
+            </View>
+
+          ) : !scanned ? (
+            /* Camera view */
+            <View style={barcodeStyles.cameraWrapper}>
+              <CameraView
+                style={StyleSheet.absoluteFillObject}
+                facing="back"
+                onBarcodeScanned={handleBarcodeScan}
+                barcodeScannerSettings={{ barcodeTypes: ["ean13", "ean8", "upc_a", "upc_e"] }}
+              />
+              {/* Viewfinder overlay */}
+              <View style={barcodeStyles.overlay}>
+                <View style={barcodeStyles.viewfinder}>
+                  <View style={[barcodeStyles.corner, barcodeStyles.topLeft]} />
+                  <View style={[barcodeStyles.corner, barcodeStyles.topRight]} />
+                  <View style={[barcodeStyles.corner, barcodeStyles.bottomLeft]} />
+                  <View style={[barcodeStyles.corner, barcodeStyles.bottomRight]} />
+                </View>
+                <Text style={barcodeStyles.overlayHint}>Align barcode within the frame</Text>
+              </View>
+            </View>
+
+          ) : barcodeLoading ? (
+            /* Loading state */
+            <View style={barcodeStyles.centreBox}>
+              <Text style={barcodeStyles.loadingText}>Looking up product...</Text>
+            </View>
+
+          ) : barcodeError ? (
+            /* Error / not found state */
+            <View style={barcodeStyles.centreBox}>
+              <Ionicons name="alert-circle-outline" size={48} color="#888" />
+              <Text style={barcodeStyles.permissionText}>{barcodeError}</Text>
+              <TouchableOpacity style={styles.saveBtn} onPress={resetBarcodeModal}>
+                <Text style={[styles.saveBtnText, { paddingLeft: 10, paddingRight: 10 }]}>Scan Again</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.saveBtn, barcodeStyles.secondaryBtn]}
+                onPress={() => {
+                  setBarcodeVisible(false);
+                  resetBarcodeModal();
+                  setSearchVisible(true);
+                }}
+              >
+                <Text style={[styles.saveBtnText, { color: "#50863F" }]}>Search Manually</Text>
+              </TouchableOpacity>
+            </View>
+
+          ) : barcodeProduct ? (
+            /* Product found state */
+            <View style={barcodeStyles.productBox}>
+              {barcodeProduct.image && (
+                <Image
+                  source={{ uri: barcodeProduct.image }}
+                  style={barcodeStyles.productImage}
+                />
+              )}
+              <View style={styles.resultCard}>
+                <View style={styles.resultRow}>
+                  <View style={styles.productInfo}>
+                    <Text style={styles.productName}>{barcodeProduct.name}</Text>
+                    {barcodeProduct.brand && (
+                      <Text style={styles.productBrand}>{barcodeProduct.brand}</Text>
+                    )}
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={styles.saveBtn}
+                  onPress={() => {
+                    addIngredientToPantry(barcodeProduct.name);
+                    setBarcodeVisible(false);
+                    resetBarcodeModal();
+                  }}
+                >
+                  <Text style={styles.saveBtnText}>+ Add to Pantry</Text>
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity onPress={resetBarcodeModal} style={barcodeStyles.scanAgainLink}>
+                <Text style={barcodeStyles.scanAgainText}>Scan a different product</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
         </View>
       </Modal>
 
@@ -611,5 +740,92 @@ const styles = StyleSheet.create({
     fontSize: RFValue(15),
     fontFamily: "Inter_600SemiBold",
     letterSpacing: 0.5,
+  },
+});
+
+const barcodeStyles = StyleSheet.create({
+  cameraWrapper: {
+    marginTop: 20,
+    marginHorizontal: 16,
+    height: 280,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#2a2d3a',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+  },
+  viewfinder: {
+    width: 220,
+    height: 120,
+    position: 'relative',
+  },
+  corner: {
+    position: 'absolute',
+    width: 20,
+    height: 20,
+    borderColor: '#F8F5EC',
+    borderWidth: 3,
+  },
+  topLeft:     { top: 0, left: 0,  borderRightWidth: 0, borderBottomWidth: 0 },
+  topRight:    { top: 0, right: 0, borderLeftWidth: 0,  borderBottomWidth: 0 },
+  bottomLeft:  { bottom: 0, left: 0,  borderRightWidth: 0, borderTopWidth: 0 },
+  bottomRight: { bottom: 0, right: 0, borderLeftWidth: 0,  borderTopWidth: 0 },
+  overlayHint: {
+    color: '#F8F5EC',
+    fontSize: RFValue(12),
+    fontFamily: 'Inter_500Medium',
+    textAlign: 'center',
+  },
+  centreBox: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+    paddingHorizontal: 30,
+  },
+  permissionText: {
+    fontSize: RFValue(13),
+    color: '#707070',
+    fontFamily: 'Inter_500Medium',
+    textAlign: 'center',
+  },
+  loadingText: {
+    fontSize: RFValue(14),
+    color: '#707070',
+    fontFamily: 'Inter_500Medium',
+  },
+  productBox: {
+    flex: 1,
+    paddingTop: 20,
+    paddingHorizontal: 16,
+  },
+  productImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 12,
+    alignSelf: 'center',
+    marginBottom: 16,
+    backgroundColor: '#0f1117',
+  },
+  secondaryBtn: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#50863F',
+    padding: 10
+  },
+  scanAgainLink: {
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  scanAgainText: {
+    color: '#50863F',
+    fontSize: RFValue(13),
+    fontFamily: 'Inter_500Medium',
+    textDecorationLine: 'underline',
   },
 });
