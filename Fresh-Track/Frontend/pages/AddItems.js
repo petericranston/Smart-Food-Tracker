@@ -19,6 +19,7 @@ import ReceiptScanner from "../components/ReceiptScanner";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import OpenAI from "openai";
+import { CameraView, useCameraPermissions } from 'expo-camera';
 
 const openai = new OpenAI({
   apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
@@ -49,6 +50,13 @@ export default function AddItems() {
   const [receiptVisible, setReceiptVisible] = useState(false);
   const [barcodeVisible, setBarcodeVisible] = useState(false);
   const [searchVisible, setSearchVisible] = useState(false);
+
+  // barcode states
+  const [permission, requestPermission] = useCameraPermissions();
+  const [scanned, setScanned] = useState(false);
+  const [barcodeProduct, setBarcodeProduct] = useState(null);
+  const [barcodeLoading, setBarcodeLoading] = useState(false);
+  const [barcodeError, setBarcodeError] = useState(null);
 
   const formatExpiry = (expiryDate) => {
     if (!expiryDate) return "-/-";
