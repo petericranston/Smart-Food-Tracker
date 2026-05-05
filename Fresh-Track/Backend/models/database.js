@@ -5,6 +5,7 @@ const { Schema, model } = mongoose;
 
 const recipeIngredientsSchema = new Schema({
   ingredient: String,
+});
 
 const recipeStepsSchema = new Schema({
   step: String,
