@@ -33,15 +33,17 @@ export default function RecipeDetail({ recipe, onClose }) {
             <View style={styles.expiringBadge}>
               <Text style={styles.expiringText}>USES EXPIRING</Text>
             </View>
-            <Text style={styles.emoji}>{recipe.dishEmoji}</Text>
+            <Text style={styles.emoji}>{recipe.recipeEmoji}</Text>
           </View>
 
           <View style={styles.content}>
             <Text style={styles.title}>{recipe.name}</Text>
 
             <View style={styles.metaRow}>
-              <Text style={styles.metaText}>⌛ {recipe.time}</Text>
-              <Text style={styles.metaText}>👨 Serves {recipe.serves}</Text>
+              <Text style={styles.metaText}>⌛ {recipe.estimatedTime}</Text>
+              <Text style={styles.metaText}>
+                👨 Serves {recipe.peopleServed}
+              </Text>
               <View style={styles.expBadge}>
                 <Text style={styles.expBadgeText}>USES EXPIRING</Text>
               </View>
@@ -49,20 +51,24 @@ export default function RecipeDetail({ recipe, onClose }) {
 
             <View style={styles.ingredientsPill}>
               <View style={styles.pillCircle}>
-                <Text style={styles.pillNumber}>{recipe.ingredients}</Text>
+                <Text style={styles.pillNumber}>
+                  {recipe.numberOfIngredients}
+                </Text>
               </View>
               <Text style={styles.pillText}>
-                Use's {recipe.ingredients} of your ingredients
+                Use's {recipe.numberOfIngredients} of your ingredients
               </Text>
             </View>
 
             <View style={styles.divider} />
 
             <Text style={styles.sectionTitle}>Ingredients:</Text>
-            {recipe.ingredientsList.map((ingredient, index) => (
+            {recipe.ingredientsUsed.map((ingredient, index) => (
               <View key={index} style={styles.bulletRow}>
                 <Text style={styles.bullet}>•</Text>
-                <Text style={styles.bulletText}>{ingredient}</Text>
+                <Text style={styles.bulletText}>
+                  {ingredient.name} - {ingredient.amount}
+                </Text>
               </View>
             ))}
 

@@ -24,84 +24,27 @@ export default function Recipes() {
   const [username, setUsername] = useState("");
 
   const [savedRecipes, setSavedRecipes] = useState([]);
+  const [ingredients, setIngredients] = useState([]);
+  const [generatedRecipes, setGeneratedRecipes] = useState([]);
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
   useEffect(() => {
-    const loadUser = async () => {
+    const init = async () => {
       const savedUsername = await AsyncStorage.getItem("username");
-      if (savedUsername) setUsername(savedUsername);
-    };
-    loadUser();
-  }, []);
+      if (!savedUsername) return;
+      setUsername(savedUsername);
 
-  const dummyDishes = [
-    {
-      dishEmoji: "🍝",
-      name: "Spaghetti Bolognese",
-      time: "45 mins",
-      serves: 4,
-      ingredientsNum: 6,
-      ingredientsList: [
-        { ingredient: "Spaghetti" },
-        { ingredient: "Beef mince" },
-        { ingredient: "Tomato passata" },
-        { ingredient: "Onion" },
-        { ingredient: "Garlic" },
-        { ingredient: "Olive oil" },
-      ],
-      steps: [
-        { step: "Boil spaghetti in salted water until al dente" },
-        { step: "Fry onion and garlic in olive oil until soft" },
-        { step: "Add beef mince and cook until browned" },
-        { step: "Pour in passata and simmer for 20 minutes" },
-        { step: "Season with salt and pepper" },
-        { step: "Serve mince over spaghetti" },
-      ],
-    },
-    {
-      dishEmoji: "🍗",
-      name: "Lemon Herb Chicken",
-      time: "30 mins",
-      serves: 2,
-      ingredientsNum: 5,
-      ingredientsList: [
-        { ingredient: "Chicken breast" },
-        { ingredient: "Lemon" },
-        { ingredient: "Garlic" },
-        { ingredient: "Olive oil" },
-        { ingredient: "Mixed herbs" },
-      ],
-      steps: [
-        { step: "Mix lemon juice, garlic, olive oil and herbs" },
-        { step: "Marinate chicken for at least 15 minutes" },
-        { step: "Heat a pan over medium-high heat" },
-        { step: "Cook chicken for 6-7 minutes each side" },
-        { step: "Rest for 5 minutes before serving" },
-      ],
-    },
-    {
-      dishEmoji: "🥗",
-      name: "Caesar Salad",
-      time: "15 mins",
-      serves: 3,
-      ingredientsNum: 5,
-      ingredientsList: [
-        { ingredient: "Romaine lettuce" },
-        { ingredient: "Parmesan" },
-        { ingredient: "Croutons" },
-        { ingredient: "Caesar dressing" },
-        { ingredient: "Black pepper" },
-      ],
-      steps: [
-        { step: "Wash and chop romaine lettuce" },
-        { step: "Add croutons and parmesan shavings" },
-        { step: "Drizzle caesar dressing over the salad" },
-        { step: "Toss everything together" },
-        { step: "Season with black pepper and serve" },
-      ],
-    },
-  ];
+      const response = await fetch(`${API_URL}/api/getIngredients`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: savedUsername }),
+      });
+      const data = await response.json();
+      if (response.ok) setIngredients(data);
+    };
+    init();
+  }, []);
 
   const toggleSaved = (item) => {
     setSavedRecipes((prev) => {
@@ -168,14 +111,21 @@ export default function Recipes() {
           </View>
 
           <View style={{ alignItems: "center" }}>
-            {dummyDishes.map((item) => (
+            <RecipeTestCompAIEdited
+              ingredients={ingredients.map((i) => ({
+                name: i.IngredientName,
+                expiryDate: i.ExpiryDate,
+              }))}
+              onRecipeGeneration={(recipes) => setGeneratedRecipes(recipes)}
+            />
+            {generatedRecipes.map((item) => (
               <RecipesWidget
                 key={item.name}
-                dishEmoji={item.dishEmoji}
+                dishEmoji={item.recipeEmoji}
                 dishName={item.name}
-                dishTime={item.time}
-                pplServed={item.serves}
-                numIngredients={item.ingredientsNum}
+                dishTime={item.estimatedTime}
+                pplServed={item.peopleServed}
+                numIngredients={item.numberOfIngredients}
                 isSaved={savedRecipes.some((r) => r.name === item.name)}
                 onToggleSave={() => {
                   toggleSaved(item);
@@ -188,7 +138,6 @@ export default function Recipes() {
           </View>
         </ScrollView>
       </SafeAreaView>
-
       {/* Saved Recipes Modal */}
       <Modal
         visible={savedVisible}
@@ -212,11 +161,11 @@ export default function Recipes() {
                 savedRecipes.map((item) => (
                   <RecipesWidget
                     key={item.name}
-                    dishEmoji={item.dishEmoji}
+                    dishEmoji={item.recipeEmoji}
                     dishName={item.name}
-                    dishTime={item.time}
-                    pplServed={item.serves}
-                    numIngredients={item.ingredientsNum}
+                    dishTime={item.estimatedTime}
+                    pplServed={item.peopleServed}
+                    numIngredients={item.numberOfIngredients}
                     isSaved={true}
                     onToggleSave={() => toggleSaved(item)}
                     onPress={() => {
@@ -232,7 +181,6 @@ export default function Recipes() {
           </ScrollView>
         </View>
       </Modal>
-
       {/* Recipe Detail Modal */}
       {selectedRecipe && (
         <RecipeDetail

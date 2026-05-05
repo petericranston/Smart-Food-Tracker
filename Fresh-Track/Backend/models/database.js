@@ -4,21 +4,22 @@ const bcrypt = require("bcrypt");
 const { Schema, model } = mongoose;
 
 const recipeIngredientsSchema = new Schema({
-  ingredient: String,
-});
-
-const recipeStepsSchema = new Schema({
-  step: String,
+  name: String,
+  amount: String,
+  expiryDate: String,
 });
 
 const recipeSchema = new Schema({
-  dishEmoji: String,
+  recipeEmoji: String,
   name: String,
-  time: String,
-  serves: Number,
-  ingredientsNum: Number,
-  ingredientsList: [recipeIngredientsSchema],
-  steps: [recipeStepsSchema],
+  estimatedTime: String,
+  peopleServed: Number,
+  numberOfIngredients: Number,
+  priorityScore: Number,
+  favourite: Boolean,
+  ingredientsUsed: [recipeIngredientsSchema],
+  missingIngredients: [{ name: String, amount: String }],
+  steps: [String],
 });
 
 const ingredientSchema = new Schema({

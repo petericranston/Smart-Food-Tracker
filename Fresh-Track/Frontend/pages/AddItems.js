@@ -21,27 +21,23 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import OpenAI from "openai";
 import { CameraView, useCameraPermissions } from "expo-camera";
 
-
 const openai = new OpenAI({
   apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
   dangerouslyAllowBrowser: true,
 });
 
 export default function AddItems() {
-
   const [username, setUsername] = useState("");
   useEffect(() => {
     const loadUser = async () => {
       const savedUsername = await AsyncStorage.getItem("username");
       if (savedUsername) setUsername(savedUsername);
-
     };
     loadUser();
   }, []);
 
   const today = new Date();
   const currentDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
   const insets = useSafeAreaInsets();
@@ -382,7 +378,6 @@ export default function AddItems() {
                   <Text style={{ color: "#888", fontSize: RFValue(14) }}>
                     {formatExpiry(item.expiryDate)}
                   </Text>
-
                 </View>
               );
             }}
@@ -396,7 +391,6 @@ export default function AddItems() {
           <Text style={styles.saveItemsText}>Save Items</Text>
         </TouchableOpacity>
       </SafeAreaView>
-
 
       {/* ---------Modals--------- */}
 
@@ -439,7 +433,6 @@ export default function AddItems() {
           />
         </View>
       </Modal>
-
 
       {/* Barcode modal */}
       <Modal
@@ -585,7 +578,6 @@ export default function AddItems() {
           ) : null}
         </View>
       </Modal>
-
 
       {/* Search modal */}
       <Modal
