@@ -79,6 +79,20 @@ async function addIngredients(id, ingredients) {
   }
 }
 
+async function saveRecipe(id, savedRecipe) {
+  //Adding recipe function
+  try {
+    const result = await userData.updateOne(
+      { _id: id },
+      { $push: { savedRecipes: savedRecipe } },
+    );
+    return result;
+  } catch (err) {
+    console.log("Error:", err);
+    return false;
+  }
+}
+
 async function getIngredients(id) {
   try {
     const user = await userData.findById(id, "Ingredients");
@@ -119,4 +133,5 @@ module.exports = {
   getUserByUsername,
   getIngredients,
   checkUser,
+  saveRecipe,
 };

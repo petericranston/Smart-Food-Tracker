@@ -69,6 +69,22 @@ app.post("/api/saveIngredients", async (request, response) => {
   }
 });
 
+app.post("/api/saveRecipe", async (request, response) => {
+  try {
+    const { username, savedRecipe } = request.body;
+
+    const user = await database.getUserByUsername(username);
+    if (!user) return response.status(404).json({ error: "User not found" });
+
+    await database.saveRecipe(user._id, savedRecipe);
+
+    response.json({ success: true });
+  } catch (err) {
+    console.log(err);
+    response.status(500).json({ error: "Server error" });
+  }
+});
+
 app.post("/api/getIngredients", async (request, response) => {
   try {
     const { username } = request.body;
