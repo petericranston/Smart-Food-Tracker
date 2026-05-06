@@ -417,24 +417,24 @@ export default function Home() {
                       <Text style={[styles.h4, { marginBottom: 20 }]}>
                         {item}
                       </Text>
-                      {itemsInCategory.map((item) => {
+                      {itemsInCategory.map((ingredient) => {
                         const today = new Date();
-                        const expiry = new Date(item.ExpiryDate);
+                        const expiry = new Date(ingredient.ExpiryDate);
 
                         const diffTime = expiry - today;
                         const daysLeft = Math.ceil(
                           diffTime / (1000 * 60 * 60 * 24),
-                        ); // convert ms to days
+                        );
                         const getExpiryColor = (daysLeft) => {
-                          if (daysLeft <= 2) return "#ff1717"; // red - expires in a couple days
-                          if (daysLeft <= 6) return "#ff7723"; // orange - very soon
-                          return "#50863F"; // green - plenty of time
+                          if (daysLeft <= 2) return "#ff1717";
+                          if (daysLeft <= 6) return "#ff7723";
+                          return "#50863F";
                         };
                         return (
                           <ExpiringWidget
-                            key={item.id}
+                            key={ingredient._id}
                             image={require("../assets/foodplaceholders/mschicken.png")}
-                            name={item.IngredientName}
+                            name={ingredient.IngredientName}
                             expireMessage={`This item is expiring in ${daysLeft} days!`}
                             expiringIn={`${daysLeft} days`}
                             dateStyling={{
