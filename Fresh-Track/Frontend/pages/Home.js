@@ -76,6 +76,13 @@ export default function Home() {
     (a, b) => new Date(a.ExpiryDate) - new Date(b.ExpiryDate),
   );
 
+  const expiringSoonCount = AllIngredients.filter((item) => {
+    const daysLeft = Math.ceil(
+      (new Date(item.ExpiryDate) - new Date()) / (1000 * 60 * 60 * 24),
+    );
+    return daysLeft <= 3;
+  }).length;
+
   const navigation = useNavigation();
 
   async function register() {
@@ -188,7 +195,7 @@ export default function Home() {
                 />
               </TouchableOpacity>
               <DashboardWidget
-                count={AllIngredients.length}
+                count={expiringSoonCount}
                 title="Expiring Soon"
               />
             </View>
