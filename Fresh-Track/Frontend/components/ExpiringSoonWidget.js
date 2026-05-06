@@ -10,8 +10,8 @@ export default function ExpiringWidget({ image, name, expireMessage, expiringIn,
             borderRadius: 10, backgroundColor: "#fff", alignItems: "center", justifyContent: "space-evenly" 
         }}>
             <Image source={image} style={{ width: 60, height: 60 }}></Image>
-            <View style={{ flexDirection: "column" }}>
-                <Text style={{fontSize: RFValue(16), marginBottom: 5, fontFamily: 'Inter_500Medium'}}>{name}</Text>
+            <View style={{ flexDirection: "column", flexShrink: 1 }}>
+                <Text style={{fontSize: RFValue(13), marginBottom: 5, fontFamily: 'Inter_500Medium', flexWrap: 'wrap'}}>{name}</Text>
                 <Text style={{ fontSize: RFValue(9), width: "70%", color: "#8E8E8E"}}>{expireMessage}</Text>
             </View>
             <View style={dateStyling}>
