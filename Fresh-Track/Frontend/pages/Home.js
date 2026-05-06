@@ -73,7 +73,7 @@ export default function Home() {
     "seafood",
   ];
   const sortedItems = [...AllIngredients].sort(
-    (a, b) => new Date(a.expiryDate) - new Date(b.expiryDate),
+    (a, b) => new Date(a.ExpiryDate) - new Date(b.ExpiryDate),
   );
 
   const navigation = useNavigation();
@@ -217,7 +217,7 @@ export default function Home() {
                     </Text>
                   </View>
                   <View>
-                    {AllIngredients.map((item) => {
+                    {sortedItems.slice(0, 3).map((item) => {
                       const today = new Date();
                       const expiry = new Date(item.ExpiryDate);
 
