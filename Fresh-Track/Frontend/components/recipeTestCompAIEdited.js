@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 
+export default function RecipeTestCompAIEdited({
   ingredients,
   onRecipeGeneration,
 }) {
