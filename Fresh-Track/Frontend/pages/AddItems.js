@@ -21,7 +21,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import OpenAI from "openai";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Swipeable, GestureHandlerRootView } from "react-native-gesture-handler";
+import {
+  Swipeable,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
 
 const openai = new OpenAI({
   apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
@@ -82,8 +85,8 @@ export default function AddItems() {
     const formatted = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
     setScannedItems((prev) =>
       prev.map((item) =>
-        item.id === editingItemId ? { ...item, expiryDate: formatted } : item
-      )
+        item.id === editingItemId ? { ...item, expiryDate: formatted } : item,
+      ),
     );
     setDatePickerVisible(false);
     setEditingItemId(null);
@@ -184,6 +187,7 @@ export default function AddItems() {
     - No extra text
     - No extra keys
     - If a value is missing, use null
+    - Return a single emoji that best represents each product as "emoji"
 
     Current date:
     - currentDate = ${currentDate}
@@ -271,7 +275,8 @@ export default function AddItems() {
       "food_group": null,
       "storage_state": null,
       "predicted_expiry_date": null,
-      "expiration_date_rating": null
+      "expiration_date_rating": null,
+      "emoji": null,
     }
     `;
 
@@ -299,6 +304,7 @@ export default function AddItems() {
           unit: null,
           foodGroup: parsedResults.food_group,
           storageState: parsedResults.storage_state,
+          emoji: parsedResults.emoji,
         },
       ]);
     } catch (error) {
@@ -424,7 +430,12 @@ export default function AddItems() {
                         onPress={() => openDatePicker(item)}
                         style={styles.expiryPill}
                       >
-                        <Feather name="edit-2" size={10} color="#50863F" style={{ marginRight: 4 }} />
+                        <Feather
+                          name="edit-2"
+                          size={10}
+                          color="#50863F"
+                          style={{ marginRight: 4 }}
+                        />
                         <Text style={{ color: "#888", fontSize: RFValue(14) }}>
                           {formatExpiry(item.expiryDate)}
                         </Text>
@@ -437,10 +448,16 @@ export default function AddItems() {
           </View>
           <TouchableOpacity
             style={styles.saveItems}
-            onPress={() => {saveIngredients(scannedItems); setSavedItems(true); setTimeout(() => setSavedItems(false), 2000);}}
+            onPress={() => {
+              saveIngredients(scannedItems);
+              setSavedItems(true);
+              setTimeout(() => setSavedItems(false), 2000);
+            }}
           >
             <Ionicons name="checkmark-circle-outline" color="white" size={20} />
-            <Text style={styles.saveItemsText}>{savedItems ? "Items Saved!" : "Save Items"}</Text>
+            <Text style={styles.saveItemsText}>
+              {savedItems ? "Items Saved!" : "Save Items"}
+            </Text>
           </TouchableOpacity>
         </SafeAreaView>
       </GestureHandlerRootView>
@@ -479,6 +496,7 @@ export default function AddItems() {
                 storageState: product.storage_state,
                 foodQuantity: product.number_of_products,
                 unit: null,
+                emoji: product.emoji,
               }));
               setScannedItems(mapped);
               setReceiptVisible(false);

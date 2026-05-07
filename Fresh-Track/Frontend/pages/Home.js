@@ -274,6 +274,7 @@ export default function Home() {
                             marginTop: 5,
                             borderRadius: 10,
                           }}
+                          emoji={item.Emoji}
                         />
                       );
                     })}
@@ -495,6 +496,7 @@ export default function Home() {
                                   marginTop: 5,
                                   borderRadius: 10,
                                 }}
+                                emoji={ingredient.Emoji}
                               />
                             </Swipeable>
                           );
@@ -549,6 +551,7 @@ export default function Home() {
                             marginTop: 5,
                             borderRadius: 10,
                           }}
+                          emoji={item.Emoji}
                         />
                       </Swipeable>
                     );

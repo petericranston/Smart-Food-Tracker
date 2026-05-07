@@ -62,6 +62,7 @@ export default function ReceiptScanner({ onScanComplete }) {
     - No extra keys
     - If a value is missing, use null
     - If uncertain whether an item is edible, exclude it unless it is likely food; if included under uncertainty, set "expiration_date_rating" to "red"
+    - Return a single emoji that best represents each product as "emoji"
 
     Current date rules:
     - currentDate = ${currentDate}
@@ -193,7 +194,8 @@ export default function ReceiptScanner({ onScanComplete }) {
           "storage_state": null,
           "product_expiration_date": null,
           "expiration_date_rating": null,
-          "number_of_products" : null
+          "number_of_products" : null,
+          "emoji": null
         }
       ]
     }`;
@@ -232,7 +234,7 @@ export default function ReceiptScanner({ onScanComplete }) {
       const result = await openai.chat.completions.create({
         model: "gpt-4o",
         temperature: 0,
-        max_tokens: 1000,
+        max_tokens: 4000,
         messages: [
           {
             role: "user",
@@ -254,6 +256,8 @@ export default function ReceiptScanner({ onScanComplete }) {
       });
 
       const text = result.choices[0]?.message?.content ?? "";
+      console.log("Raw receipt response:", text);
+
       const parsed = safeParseJson(String(text));
       setReceipt(parsed);
       onScanComplete(parsed); // sending data to the display in AddItems.js
@@ -295,7 +299,6 @@ export default function ReceiptScanner({ onScanComplete }) {
           )}
         </TouchableOpacity>
       )}
-
 
       {receipt && (
         <View style={styles.jsonContainer}>
@@ -388,4 +391,3 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 });
-

@@ -213,13 +213,6 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_600SemiBold",
     marginBottom: 16,
   },
-  btn: {
-    backgroundColor: "#111",
-    padding: 16,
-    borderRadius: 12,
-    alignItems: "center",
-    marginBottom: 20,
-  },
   btnDisabled: {
     backgroundColor: "#555",
   },

@@ -1,28 +1,60 @@
 import { View, Text, Image } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 
-export default function ExpiringWidget({ image, name, expireMessage, expiringIn, dateStyling }){
-    const truncateToWords = (text, maxWords = 5) => {
-        const words = text.trim().split(/\s+/);
-        if (words.length <= maxWords) return text;
-        return words.slice(0, maxWords).join(' ') + '...';
-    };
+export default function ExpiringWidget({
+  image,
+  emoji,
+  name,
+  expireMessage,
+  expiringIn,
+  dateStyling,
+}) {
+  const truncateToWords = (text, maxWords = 5) => {
+    const words = text.trim().split(/\s+/);
+    if (words.length <= maxWords) return text;
+    return words.slice(0, maxWords).join(" ") + "...";
+  };
 
-    return(
-        <View style={{ 
-            flexDirection: "row", marginBottom: 20, 
-            borderColor: "#B5B5B540", borderWidth: 2, paddingBottom: 20, paddingTop: 20, 
-            paddingLeft: 10, paddingRight: 10,
-            borderRadius: 10, backgroundColor: "#fff", alignItems: "center", justifyContent: "space-evenly" 
-        }}>
-            <Image source={image} style={{ width: 60, height: 60 }}></Image>
-            <View style={{ flexDirection: "column", flexShrink: 1 }}>
-                <Text style={{fontSize: RFValue(13), marginBottom: 5, fontFamily: 'Inter_500Medium', flexWrap: 'wrap'}}>{truncateToWords(name)}</Text>
-                <Text style={{ fontSize: RFValue(9), width: "70%", color: "#8E8E8E"}}>{expireMessage}</Text>
-            </View>
-            <View style={dateStyling}>
-                <Text style={{ color: "white" }}>{expiringIn}</Text>
-            </View>
-        </View>
-    )
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        marginBottom: 20,
+        borderColor: "#B5B5B540",
+        borderWidth: 2,
+        paddingBottom: 20,
+        paddingTop: 20,
+        paddingLeft: 10,
+        paddingRight: 10,
+        borderRadius: 10,
+        backgroundColor: "#fff",
+        alignItems: "center",
+        justifyContent: "space-evenly",
+      }}
+    >
+      {emoji ? (
+        <Text style={{ fontSize: 45 }}>{emoji}</Text>
+      ) : (
+        <Image source={image} style={{ width: 60, height: 60 }} />
+      )}
+      <View style={{ flexDirection: "column", flexShrink: 1 }}>
+        <Text
+          style={{
+            fontSize: RFValue(13),
+            marginBottom: 5,
+            fontFamily: "Inter_500Medium",
+            flexWrap: "wrap",
+          }}
+        >
+          {truncateToWords(name)}
+        </Text>
+        <Text style={{ fontSize: RFValue(9), width: "70%", color: "#8E8E8E" }}>
+          {expireMessage}
+        </Text>
+      </View>
+      <View style={dateStyling}>
+        <Text style={{ color: "white" }}>{expiringIn}</Text>
+      </View>
+    </View>
+  );
 }

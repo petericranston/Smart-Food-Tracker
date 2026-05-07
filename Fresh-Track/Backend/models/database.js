@@ -29,6 +29,7 @@ const ingredientSchema = new Schema({
   Unit: { type: String, default: null },
   FoodGroup: { type: String, default: null },
   StorageState: { type: String, default: null },
+  Emoji: { type: String, default: null },
 });
 
 const userSchema = new Schema({
@@ -68,6 +69,7 @@ async function addIngredients(id, ingredients) {
       Unit: item.unit || null,
       FoodGroup: item.foodGroup || null,
       StorageState: item.storageState || null,
+      Emoji: item.emoji || null,
     }));
     const result = await userData.updateOne(
       { _id: id },
