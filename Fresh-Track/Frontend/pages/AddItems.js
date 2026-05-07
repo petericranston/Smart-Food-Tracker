@@ -21,6 +21,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import OpenAI from "openai";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { Swipeable, GestureHandlerRootView } from "react-native-gesture-handler";
 
 const openai = new OpenAI({
   apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
@@ -330,102 +331,119 @@ export default function AddItems() {
     }
   }
 
+  function deleteItem(id) {
+    setScannedItems((prev) => prev.filter((item) => item.id !== id));
+  }
+
   return (
     <>
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.h1}>Add items</Text>
-        <Text style={styles.h2}>Choose how to add your food</Text>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaView style={styles.container}>
+          <Text style={styles.h1}>Add items</Text>
+          <Text style={styles.h2}>Choose how to add your food</Text>
 
-        <View style={{ alignItems: "center", marginTop: 15 }}>
-          <View style={{ flexDirection: "row", gap: 20, marginBottom: 23 }}>
+          <View style={{ alignItems: "center", marginTop: 15 }}>
+            <View style={{ flexDirection: "row", gap: 20, marginBottom: 23 }}>
+              <ItemInput
+                inputChoice={"Scan receipt"}
+                onPressFunction={() => setReceiptVisible(true)}
+              >
+                <Ionicons name="receipt-outline" color="white" size={40} />
+              </ItemInput>
+              <ItemInput
+                inputChoice={"Scan barcode"}
+                onPressFunction={() => setBarcodeVisible(true)}
+              >
+                <Ionicons name="barcode-outline" size={40} color="white" />
+              </ItemInput>
+            </View>
+
             <ItemInput
-              inputChoice={"Scan receipt"}
-              onPressFunction={() => setReceiptVisible(true)}
+              inputChoice={"Search item"}
+              onPressFunction={() => setSearchVisible(true)}
             >
-              <Ionicons name="receipt-outline" color="white" size={40} />
-            </ItemInput>
-            <ItemInput
-              inputChoice={"Scan barcode"}
-              onPressFunction={() => setBarcodeVisible(true)}
-            >
-              <Ionicons name="barcode-outline" size={40} color="white" />
+              <Feather name="search" size={40} color="white" />
             </ItemInput>
           </View>
 
-          <ItemInput
-            inputChoice={"Search item"}
-            onPressFunction={() => setSearchVisible(true)}
-          >
-            <Feather name="search" size={40} color="white" />
-          </ItemInput>
-        </View>
-
-        {/* Divider line */}
-        <View
-          style={{
-            height: 1,
-            backgroundColor: "#B5B5B549",
-            marginTop: 25,
-            shadowColor: "#000000",
-            shadowOffset: { width: 2, height: 2 },
-            shadowOpacity: 0.8,
-            shadowRadius: 4,
-            elevation: 4,
-          }}
-        />
-
-        <View
-          style={{
-            marginTop: 25,
-            padding: 15,
-            borderColor: "#B5B5B550",
-            borderWidth: 2,
-            maxHeight: 200,
-            minHeight: 50,
-          }}
-        >
-          <FlatList
-            data={scannedItems}
-            keyExtractor={(item) => item.id.toString()}
-            ListEmptyComponent={
-              <Text style={{ textAlign: "center", fontSize: RFValue(14) }}>
-                Added items will show here!
-              </Text>
-            }
-            renderItem={({ item }) => {
-              const displayUnit = item.unit
-                ? `${item.foodQuantity} x ${item.unit}`
-                : `${item.foodQuantity} x`;
-              return (
-                <View style={styles.itemsRow}>
-                  <Text
-                    numberOfLines={3}
-                    style={{ fontSize: RFValue(14), width: "70%" }}
-                  >
-                    {displayUnit} {item.name}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => openDatePicker(item)}
-                    style={styles.expiryPill}
-                  >
-                    <Feather name="edit-2" size={10} color="#50863F" style={{ marginRight: 4 }} />
-                    <Text style={{ color: "#888", fontSize: RFValue(14) }}>
-                      {formatExpiry(item.expiryDate)}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              );
+          {/* Divider line */}
+          <View
+            style={{
+              height: 1,
+              backgroundColor: "#B5B5B549",
+              marginTop: 25,
+              shadowColor: "#000000",
+              shadowOffset: { width: 2, height: 2 },
+              shadowOpacity: 0.8,
+              shadowRadius: 4,
+              elevation: 4,
             }}
           />
-        </View>
-        <TouchableOpacity
-          style={styles.saveItems}
-          onPress={() => {saveIngredients(scannedItems); setSavedItems(true); setTimeout(() => setSavedItems(false), 2000);}}
-        >
-          <Ionicons name="checkmark-circle-outline" color="white" size={20} />
-          <Text style={styles.saveItemsText}>{savedItems ? "Items Saved!" : "Save Items"}</Text>
-        </TouchableOpacity>
-      </SafeAreaView>
+
+          <View
+            style={{
+              marginTop: 25,
+              padding: 15,
+              borderColor: "#B5B5B550",
+              borderWidth: 2,
+              maxHeight: 200,
+              minHeight: 50,
+            }}
+          >
+            <FlatList
+              data={scannedItems}
+              keyExtractor={(item) => item.id.toString()}
+              ListEmptyComponent={
+                <Text style={{ textAlign: "center", fontSize: RFValue(14) }}>
+                  Added items will show here, swipe left on the date to delete!
+                </Text>
+              }
+              renderItem={({ item }) => {
+                const displayUnit = item.unit
+                  ? `${item.foodQuantity} x ${item.unit}`
+                  : `${item.foodQuantity} x`;
+
+                const renderRightActions = () => (
+                  <TouchableOpacity
+                    style={styles.deleteAction}
+                    onPress={() => deleteItem(item.id)}
+                  >
+                    <Ionicons name="trash-outline" size={20} color="white" />
+                  </TouchableOpacity>
+                );
+                return (
+                  <Swipeable renderRightActions={renderRightActions}>
+                    <View style={styles.itemsRow}>
+                      <Text
+                        numberOfLines={3}
+                        style={{ fontSize: RFValue(14), width: "70%" }}
+                      >
+                        {displayUnit} {item.name}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => openDatePicker(item)}
+                        style={styles.expiryPill}
+                      >
+                        <Feather name="edit-2" size={10} color="#50863F" style={{ marginRight: 4 }} />
+                        <Text style={{ color: "#888", fontSize: RFValue(14) }}>
+                          {formatExpiry(item.expiryDate)}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </Swipeable>
+                );
+              }}
+            />
+          </View>
+          <TouchableOpacity
+            style={styles.saveItems}
+            onPress={() => {saveIngredients(scannedItems); setSavedItems(true); setTimeout(() => setSavedItems(false), 2000);}}
+          >
+            <Ionicons name="checkmark-circle-outline" color="white" size={20} />
+            <Text style={styles.saveItemsText}>{savedItems ? "Items Saved!" : "Save Items"}</Text>
+          </TouchableOpacity>
+        </SafeAreaView>
+      </GestureHandlerRootView>
 
       {/* ---------Modals--------- */}
 
@@ -890,6 +908,14 @@ const styles = StyleSheet.create({
     fontSize: RFValue(14),
     color: "#50863F",
     fontFamily: "Inter_600SemiBold",
+  },
+  deleteAction: {
+    backgroundColor: "#e53935",
+    justifyContent: "center",
+    alignItems: "center",
+    width: 70,
+    borderRadius: 6,
+    marginVertical: 2,
   },
 });
 
