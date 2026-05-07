@@ -21,7 +21,10 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState, useCallback } from "react";
 import InvDropdown from "../components/InvDropdown";
-import { Swipeable, GestureHandlerRootView } from "react-native-gesture-handler";
+import {
+  Swipeable,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 export default function Home() {
@@ -147,7 +150,9 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: savedUsername, ingredientId }),
       });
-      setAllIngredients((prev) => prev.filter((item) => item._id !== ingredientId));
+      setAllIngredients((prev) =>
+        prev.filter((item) => item._id !== ingredientId),
+      );
     } catch (error) {
       console.log("Failed to delete ingredient", error);
     }
@@ -418,7 +423,9 @@ export default function Home() {
                 </Text>
               </TouchableOpacity>
 
-              <Text style={[styles.h1, { marginBottom: 5 }]}>Full Inventory</Text>
+              <Text style={[styles.h1, { marginBottom: 5 }]}>
+                Full Inventory
+              </Text>
               {/* this will change depending on the filter chosen */}
               <Text style={styles.h2}>All items in your kitchen</Text>
 
@@ -460,12 +467,19 @@ export default function Home() {
                               style={styles.deleteAction}
                               onPress={() => deleteIngredient(ingredient._id)}
                             >
-                              <Ionicons name="trash-outline" size={20} color="white" />
+                              <Ionicons
+                                name="trash-outline"
+                                size={20}
+                                color="white"
+                              />
                             </TouchableOpacity>
                           );
 
                           return (
-                            <Swipeable key={ingredient._id} renderRightActions={renderRightActions}>
+                            <Swipeable
+                              key={ingredient._id}
+                              renderRightActions={renderRightActions}
+                            >
                               <ExpiringWidget
                                 key={ingredient._id}
                                 image={require("../assets/foodplaceholders/mschicken.png")}
@@ -494,18 +508,27 @@ export default function Home() {
                     const expiry = new Date(item.ExpiryDate);
 
                     const diffTime = expiry - today;
-                    const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    const daysLeft = Math.ceil(
+                      diffTime / (1000 * 60 * 60 * 24),
+                    );
 
                     const renderRightActions = () => (
                       <TouchableOpacity
                         style={styles.deleteAction}
                         onPress={() => deleteIngredient(item._id)}
                       >
-                        <Ionicons name="trash-outline" size={20} color="white" />
+                        <Ionicons
+                          name="trash-outline"
+                          size={20}
+                          color="white"
+                        />
                       </TouchableOpacity>
                     );
                     return (
-                      <Swipeable key={item._id} renderRightActions={renderRightActions}>
+                      <Swipeable
+                        key={item._id}
+                        renderRightActions={renderRightActions}
+                      >
                         <ExpiringWidget
                           key={item._id}
                           image={require("../assets/foodplaceholders/mschicken.png")}
@@ -691,6 +714,6 @@ const styles = StyleSheet.create({
     width: 70,
     borderRadius: 6,
     marginVertical: 2,
-    maxHeight: "83%"
+    maxHeight: "83%",
   },
 });

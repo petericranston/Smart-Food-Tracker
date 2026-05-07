@@ -102,11 +102,21 @@ async function getIngredients(id) {
     // auto delete anything expired by more than 2 days
     await userData.updateOne(
       { _id: id },
-      { $pull: { Ingredients: { ExpiryDate: { $lt: twoDaysAgo } } } }
+      { $pull: { Ingredients: { ExpiryDate: { $lt: twoDaysAgo } } } },
     );
 
     const user = await userData.findById(id, "Ingredients");
     return user.Ingredients;
+  } catch (err) {
+    console.log("Error:", err);
+    return false;
+  }
+}
+
+async function getRecipes(id) {
+  try {
+    const user = await userData.findById(id, "savedRecipes");
+    return user.savedRecipes;
   } catch (err) {
     console.log("Error:", err);
     return false;
@@ -141,7 +151,23 @@ async function deleteIngredient(userId, ingredientId) {
   return await userData.updateOne(
     { _id: userId },
     // $pull means to remove {whatever is in here}
-    { $pull: { Ingredients: { _id: new mongoose.Types.ObjectId(ingredientId) } } } 
+    {
+      $pull: {
+        Ingredients: { _id: new mongoose.Types.ObjectId(ingredientId) },
+      },
+    },
+  );
+}
+
+async function deleteRecipe(userId, recipeId) {
+  return await userData.updateOne(
+    { _id: userId },
+    // $pull means to remove {whatever is in here}
+    {
+      $pull: {
+        savedRecipes: { _id: new mongoose.Types.ObjectId(recipeId) },
+      },
+    },
   );
 }
 
@@ -150,7 +176,9 @@ module.exports = {
   addIngredients,
   getUserByUsername,
   getIngredients,
+  getRecipes,
   checkUser,
   saveRecipe,
-  deleteIngredient
+  deleteIngredient,
+  deleteRecipe,
 };

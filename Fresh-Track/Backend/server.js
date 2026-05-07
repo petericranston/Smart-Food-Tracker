@@ -92,6 +92,22 @@ app.post("/api/saveRecipe", async (request, response) => {
   }
 });
 
+app.post("/api/deleteRecipe", async (request, response) => {
+  try {
+    const { username, savedRecipe } = request.body;
+
+    const user = await database.getUserByUsername(username);
+    if (!user) return response.status(404).json({ error: "User not found" });
+
+    await database.deleteRecipe(user._id, savedRecipe._id);
+
+    response.json({ success: true });
+  } catch (err) {
+    console.log(err);
+    response.status(500).json({ error: "Server error" });
+  }
+});
+
 app.post("/api/getIngredients", async (request, response) => {
   try {
     const { username } = request.body;
@@ -102,6 +118,22 @@ app.post("/api/getIngredients", async (request, response) => {
     const ingredients = await database.getIngredients(user._id);
 
     response.json(ingredients);
+  } catch (err) {
+    console.log(err);
+    response.status(500).json({ error: "Server error" });
+  }
+});
+
+app.post("/api/getSavedRecipes", async (request, response) => {
+  try {
+    const { username } = request.body;
+
+    const user = await database.getUserByUsername(username);
+    if (!user) return response.status(404).json({ error: "User not found" });
+
+    const recipes = await database.getRecipes(user._id);
+
+    response.json(recipes);
   } catch (err) {
     console.log(err);
     response.status(500).json({ error: "Server error" });

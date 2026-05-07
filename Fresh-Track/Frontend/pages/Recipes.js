@@ -40,9 +40,19 @@ export default function Recipes() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: savedUsername }),
       });
-      const data = await response.json();
-      if (response.ok) setIngredients(data);
+      const ingredientData = await response.json();
+      if (response.ok) setIngredients(ingredientData);
+
+      const res = await fetch(`${API_URL}/api/getSavedRecipes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: savedUsername }),
+      });
+      const recipeData = await res.json();
+      console.log("Saved recipes from API:", recipeData);
+      if (res.ok) setSavedRecipes(recipeData);
     };
+
     init();
   }, []);
 
@@ -74,8 +84,43 @@ export default function Recipes() {
       });
       const data = await response.json();
       if (!response.ok) return;
+      await fetchSavedRecipes();
     } catch (error) {
       console.log("Error saving recipe", error);
+    }
+  }
+
+  async function fetchSavedRecipes() {
+    const savedUsername = await AsyncStorage.getItem("username");
+    if (!savedUsername) return;
+    const res = await fetch(`${API_URL}/api/getSavedRecipes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: savedUsername }),
+    });
+    const data = await res.json();
+    if (res.ok) setSavedRecipes(data);
+  }
+
+  async function deleteRecipe(savedRecipe) {
+    try {
+      const savedUsername = await AsyncStorage.getItem("username");
+      if (!savedUsername) {
+        console.log("No user logged in");
+        return;
+      }
+      const response = await fetch(`${API_URL}/api/deleteRecipe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: savedUsername,
+          savedRecipe: savedRecipe,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) return;
+    } catch (error) {
+      console.log("Error deleting recipe", error);
     }
   }
 
@@ -128,9 +173,18 @@ export default function Recipes() {
                 numIngredients={item.numberOfIngredients}
                 isSaved={savedRecipes.some((r) => r.name === item.name)}
                 onToggleSave={() => {
+                  const isSaved = savedRecipes.some(
+                    (r) => r.name === item.name,
+                  );
                   toggleSaved(item);
-                  if (!savedRecipes.some((r) => r.name === item.name))
+                  if (isSaved) {
+                    const savedItem = savedRecipes.find(
+                      (r) => r.name === item.name,
+                    );
+                    deleteRecipe(savedItem);
+                  } else {
                     saveRecipe(item);
+                  }
                 }}
                 onPress={() => setSelectedRecipe(item)}
               />
@@ -167,7 +221,13 @@ export default function Recipes() {
                     pplServed={item.peopleServed}
                     numIngredients={item.numberOfIngredients}
                     isSaved={true}
-                    onToggleSave={() => toggleSaved(item)}
+                    onToggleSave={() => {
+                      const isSaved = savedRecipes.some(
+                        (r) => r.name === item.name,
+                      );
+                      toggleSaved(item);
+                      if (isSaved) deleteRecipe(item);
+                    }}
                     onPress={() => {
                       setSavedVisible(false);
                       setTimeout(() => setSelectedRecipe(item), 300);
