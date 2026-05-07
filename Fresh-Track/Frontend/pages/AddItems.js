@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import OpenAI from "openai";
 import { CameraView, useCameraPermissions } from "expo-camera";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 const openai = new OpenAI({
   apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
@@ -45,6 +46,7 @@ export default function AddItems() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResponse, setSearchResponse] = useState(null);
   const [scannedItems, setScannedItems] = useState([]);
+  const [savedItems, setSavedItems] = useState(false);
 
   // Modal visibles
   const [receiptVisible, setReceiptVisible] = useState(false);
@@ -58,6 +60,33 @@ export default function AddItems() {
   const [barcodeLoading, setBarcodeLoading] = useState(false);
   const [barcodeError, setBarcodeError] = useState(null);
   const scanLock = useRef(false);
+
+  // scrollable date
+  const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const [editingItemId, setEditingItemId] = useState(null);
+  const [tempDate, setTempDate] = useState(new Date());
+
+  function openDatePicker(item) {
+    const initial = item.expiryDate ? new Date(item.expiryDate) : new Date();
+    setTempDate(initial);
+    setEditingItemId(item.id);
+    setDatePickerVisible(true);
+  }
+
+  function confirmDateEdit(selectedDate) {
+    if (!selectedDate) {
+      setDatePickerVisible(false);
+      return;
+    }
+    const formatted = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
+    setScannedItems((prev) =>
+      prev.map((item) =>
+        item.id === editingItemId ? { ...item, expiryDate: formatted } : item
+      )
+    );
+    setDatePickerVisible(false);
+    setEditingItemId(null);
+  }
 
   const formatExpiry = (expiryDate) => {
     if (!expiryDate) return "-/-";
@@ -375,9 +404,15 @@ export default function AddItems() {
                   >
                     {displayUnit} {item.name}
                   </Text>
-                  <Text style={{ color: "#888", fontSize: RFValue(14) }}>
-                    {formatExpiry(item.expiryDate)}
-                  </Text>
+                  <TouchableOpacity
+                    onPress={() => openDatePicker(item)}
+                    style={styles.expiryPill}
+                  >
+                    <Feather name="edit-2" size={10} color="#50863F" style={{ marginRight: 4 }} />
+                    <Text style={{ color: "#888", fontSize: RFValue(14) }}>
+                      {formatExpiry(item.expiryDate)}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               );
             }}
@@ -385,10 +420,10 @@ export default function AddItems() {
         </View>
         <TouchableOpacity
           style={styles.saveItems}
-          onPress={() => saveIngredients(scannedItems)}
+          onPress={() => {saveIngredients(scannedItems); setSavedItems(true); setTimeout(() => setSavedItems(false), 2000);}}
         >
           <Ionicons name="checkmark-circle-outline" color="white" size={20} />
-          <Text style={styles.saveItemsText}>Save Items</Text>
+          <Text style={styles.saveItemsText}>{savedItems ? "Items Saved!" : "Save Items"}</Text>
         </TouchableOpacity>
       </SafeAreaView>
 
@@ -638,6 +673,37 @@ export default function AddItems() {
           </ScrollView>
         </View>
       </Modal>
+
+      {/* Date picker modal */}
+      <Modal
+        visible={datePickerVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setDatePickerVisible(false)}
+      >
+        <View style={styles.datePickerOverlay}>
+          <View style={styles.datePickerSheet}>
+            <View style={styles.datePickerHeader}>
+              <TouchableOpacity onPress={() => setDatePickerVisible(false)}>
+                <Text style={styles.datePickerCancel}>Cancel</Text>
+              </TouchableOpacity>
+              <Text style={styles.datePickerTitle}>Edit Expiry Date</Text>
+              <TouchableOpacity onPress={() => confirmDateEdit(tempDate)}>
+                <Text style={styles.datePickerDone}>Done</Text>
+              </TouchableOpacity>
+            </View>
+            <DateTimePicker
+              value={tempDate}
+              mode="date"
+              display="spinner"
+              onChange={(_, selected) => selected && setTempDate(selected)}
+              minimumDate={new Date()}
+              style={{ width: "100%" }}
+              textColor="#000"
+            />
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -775,6 +841,55 @@ const styles = StyleSheet.create({
     fontSize: RFValue(15),
     fontFamily: "Inter_600SemiBold",
     letterSpacing: 0.5,
+  },
+  expiryPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#7E9E7430",
+    borderWidth: 1,
+    borderColor: "#50863F60",
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  expiryPillText: {
+    color: "#50863F",
+    fontSize: RFValue(12),
+    fontFamily: "Inter_600SemiBold",
+  },
+  datePickerOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "#00000055",
+  },
+  datePickerSheet: {
+    backgroundColor: "#F8F5EC",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 30,
+  },
+  datePickerHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#B5B5B549",
+  },
+  datePickerTitle: {
+    fontSize: RFValue(14),
+    fontFamily: "Inter_600SemiBold",
+  },
+  datePickerCancel: {
+    fontSize: RFValue(14),
+    color: "#707070",
+    fontFamily: "Inter_500Medium",
+  },
+  datePickerDone: {
+    fontSize: RFValue(14),
+    color: "#50863F",
+    fontFamily: "Inter_600SemiBold",
   },
 });
 
