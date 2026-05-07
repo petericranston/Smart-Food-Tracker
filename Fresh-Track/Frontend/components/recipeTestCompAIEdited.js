@@ -1,5 +1,6 @@
 import OpenAI from "openai";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+
 import {
   ActivityIndicator,
   Alert,
@@ -15,10 +16,19 @@ export default function RecipeTestCompAIEdited({
   ingredients,
   onRecipeGeneration,
 }) {
+  const hasAutoTriggered = useRef(false);
+
   const openai = new OpenAI({
     apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
     dangerouslyAllowBrowser: true,
   });
+
+  useEffect(() => {
+    if (ingredients.length > 0 && !hasAutoTriggered.current) {
+      hasAutoTriggered.current = true;
+      handleTest();
+    }
+  }, [ingredients]);
 
   function formatDateDDMMYYYY(date = new Date()) {
     const dd = String(date.getDate()).padStart(2, "0");
@@ -176,18 +186,18 @@ ${JSON.stringify(sortedIngredients, null, 2)}
     setLoading(false);
   };
   return (
-    <View>
-      <TouchableOpacity
-        style={[styles.btn, loading && styles.btnDisabled]}
-        onPress={handleTest}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.btnText}>Generate Recipes</Text>
-        )}
-      </TouchableOpacity>
+    <View style={{ alignItems: "center", marginBottom: 10 }}>
+      {loading ? (
+        <ActivityIndicator
+          size="large"
+          color="#50863F"
+          style={{ marginBottom: 20 }}
+        />
+      ) : (
+        <TouchableOpacity style={styles.btn} onPress={handleTest}>
+          <Text style={styles.btnText}>↺ Regenerate Recipes</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -245,5 +255,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginTop: 10,
     marginBottom: 6,
+  },
+  btn: {
+    backgroundColor: "#50863F",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    alignItems: "center",
+    marginBottom: 20,
   },
 });
