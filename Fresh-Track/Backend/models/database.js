@@ -96,6 +96,15 @@ async function saveRecipe(id, savedRecipe) {
 
 async function getIngredients(id) {
   try {
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+
+    // auto delete anything expired by more than 2 days
+    await userData.updateOne(
+      { _id: id },
+      { $pull: { Ingredients: { ExpiryDate: { $lt: twoDaysAgo } } } }
+    );
+
     const user = await userData.findById(id, "Ingredients");
     return user.Ingredients;
   } catch (err) {
@@ -131,7 +140,8 @@ async function checkUser(username, password) {
 async function deleteIngredient(userId, ingredientId) {
   return await userData.updateOne(
     { _id: userId },
-    { $pull: { Ingredients: { _id: new mongoose.Types.ObjectId(ingredientId) } } }
+    // $pull means to remove {whatever is in here}
+    { $pull: { Ingredients: { _id: new mongoose.Types.ObjectId(ingredientId) } } } 
   );
 }
 
