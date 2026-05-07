@@ -21,6 +21,7 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState, useCallback } from "react";
 import InvDropdown from "../components/InvDropdown";
+import { Swipeable, GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function Home() {
   const insets = useSafeAreaInsets();
@@ -135,6 +136,20 @@ export default function Home() {
     await AsyncStorage.removeItem("username");
     setUsername("");
     setAllIngredients([]);
+  }
+
+  async function deleteIngredient(ingredientId) {
+    try {
+      const savedUsername = await AsyncStorage.getItem("username");
+      await fetch(`${API_URL}/api/deleteIngredient`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: savedUsername, ingredientId }),
+      });
+      setAllIngredients((prev) => prev.filter((item) => item._id !== ingredientId));
+    } catch (error) {
+      console.log("Failed to delete ingredient", error);
+    }
   }
 
   return (

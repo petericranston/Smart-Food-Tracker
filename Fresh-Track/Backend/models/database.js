@@ -128,6 +128,13 @@ async function checkUser(username, password) {
   return user;
 }
 
+async function deleteIngredient(userId, ingredientId) {
+  return await User.updateOne(
+    { _id: userId },
+    { $pull: { Ingredients: { _id: new mongoose.Types.ObjectId(ingredientId) } } }
+  );
+}
+
 module.exports = {
   newUser,
   addIngredients,
@@ -135,4 +142,5 @@ module.exports = {
   getIngredients,
   checkUser,
   saveRecipe,
+  deleteIngredient
 };

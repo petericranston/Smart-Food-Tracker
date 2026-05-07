@@ -111,3 +111,19 @@ app.post("/api/getIngredients", async (request, response) => {
 app.listen(3001, "0.0.0.0", () => {
   console.log("Server running on port 3001");
 });
+
+app.delete("/api/deleteIngredient", async (request, response) => {
+  try {
+    const { username, ingredientId } = request.body;
+
+    const user = await database.getUserByUsername(username);
+    if (!user) return response.status(404).json({ error: "User not found" });
+
+    await database.deleteIngredient(user._id, ingredientId);
+
+    response.json({ success: true });
+  } catch (err) {
+    console.log(err);
+    response.status(500).json({ error: "Server error" });
+  }
+});
