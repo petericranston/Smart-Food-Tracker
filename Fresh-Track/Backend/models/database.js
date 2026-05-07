@@ -129,7 +129,7 @@ async function checkUser(username, password) {
 }
 
 async function deleteIngredient(userId, ingredientId) {
-  return await User.updateOne(
+  return await userData.updateOne(
     { _id: userId },
     { $pull: { Ingredients: { _id: new mongoose.Types.ObjectId(ingredientId) } } }
   );

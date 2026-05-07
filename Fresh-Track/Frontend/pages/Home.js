@@ -22,6 +22,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState, useCallback } from "react";
 import InvDropdown from "../components/InvDropdown";
 import { Swipeable, GestureHandlerRootView } from "react-native-gesture-handler";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 export default function Home() {
   const insets = useSafeAreaInsets();
@@ -387,131 +388,155 @@ export default function Home() {
         animationType="slide"
         onRequestClose={() => setViewingInv(false)} // Android back button
       >
-        <View
-          style={[
-            styles.modalContainer,
-            { paddingTop: insets.top + 25, paddingLeft: 25 },
-          ]}
-        >
-          <ScrollView>
-            <TouchableOpacity
-              onPress={() => setViewingInv(false)}
-              style={{
-                backgroundColor: "#50863F",
-                padding: 10,
-                width: "20%",
-                borderRadius: 20,
-                marginBottom: 20,
-              }}
-            >
-              <Text
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <View
+            style={[
+              styles.modalContainer,
+              { paddingTop: insets.top + 25, paddingLeft: 25 },
+            ]}
+          >
+            <ScrollView>
+              <TouchableOpacity
+                onPress={() => setViewingInv(false)}
                 style={{
-                  color: "white",
-                  textAlign: "center",
-                  fontWeight: "Inter_600SemiBold",
-                  fontSize: RFValue(14),
+                  backgroundColor: "#50863F",
+                  padding: 10,
+                  width: "20%",
+                  borderRadius: 20,
+                  marginBottom: 20,
                 }}
               >
-                Close
-              </Text>
-            </TouchableOpacity>
+                <Text
+                  style={{
+                    color: "white",
+                    textAlign: "center",
+                    fontWeight: "Inter_600SemiBold",
+                    fontSize: RFValue(14),
+                  }}
+                >
+                  Close
+                </Text>
+              </TouchableOpacity>
 
-            <Text style={[styles.h1, { marginBottom: 5 }]}>Full Inventory</Text>
-            {/* this will change depending on the filter chosen */}
-            <Text style={styles.h2}>All items in your kitchen</Text>
+              <Text style={[styles.h1, { marginBottom: 5 }]}>Full Inventory</Text>
+              {/* this will change depending on the filter chosen */}
+              <Text style={styles.h2}>All items in your kitchen</Text>
 
-            {/* dropdown */}
-            <InvDropdown
-              options={dropCategories}
-              onSelect={(value) => setCategory(value)}
-            />
-            {/* this next bit will need to be change to use conditional rendering once we have data setup and dropdown added */}
-            <View>
-              {category === "All items" ? (
-                foodCategories.map((item) => {
-                  const itemsInCategory = AllIngredients.filter(
-                    (i) => i.FoodGroup === item,
-                  );
-                  if (itemsInCategory.length === 0) return null; // skip empty categories
+              {/* dropdown */}
+              <InvDropdown
+                options={dropCategories}
+                onSelect={(value) => setCategory(value)}
+              />
+              {/* this next bit will need to be change to use conditional rendering once we have data setup and dropdown added */}
+              <View>
+                {category === "All items" ? (
+                  foodCategories.map((item) => {
+                    const itemsInCategory = AllIngredients.filter(
+                      (i) => i.FoodGroup === item,
+                    );
+                    if (itemsInCategory.length === 0) return null; // skip empty categories
 
-                  return (
-                    <View key={item}>
-                      <Text style={[styles.h4, { marginBottom: 20 }]}>
-                        {item}
-                      </Text>
-                      {itemsInCategory.map((ingredient) => {
-                        const today = new Date();
-                        const expiry = new Date(ingredient.ExpiryDate);
+                    return (
+                      <View key={item}>
+                        <Text style={[styles.h4, { marginBottom: 20 }]}>
+                          {item}
+                        </Text>
+                        {itemsInCategory.map((ingredient) => {
+                          const today = new Date();
+                          const expiry = new Date(ingredient.ExpiryDate);
 
-                        const diffTime = expiry - today;
-                        const daysLeft = Math.ceil(
-                          diffTime / (1000 * 60 * 60 * 24),
-                        );
-                        const getExpiryColor = (daysLeft) => {
-                          if (daysLeft <= 2) return "#ff1717";
-                          if (daysLeft <= 6) return "#ff7723";
-                          return "#50863F";
-                        };
-                        return (
-                          <ExpiringWidget
-                            key={ingredient._id}
-                            image={require("../assets/foodplaceholders/mschicken.png")}
-                            name={ingredient.IngredientName}
-                            expireMessage={`This item is expiring in ${daysLeft} days!`}
-                            expiringIn={`${daysLeft} days`}
-                            dateStyling={{
-                              backgroundColor: getExpiryColor(daysLeft),
-                              justifyContent: "center",
-                              paddingLeft: 10,
-                              paddingRight: 10,
-                              height: 33,
-                              marginTop: 5,
-                              borderRadius: 10,
-                            }}
-                          />
-                        );
-                      })}
-                    </View>
-                  );
-                })
-              ) : category === "Expiry date" ? (
-                sortedItems.map((item) => {
-                  const today = new Date();
-                  const expiry = new Date(item.ExpiryDate);
+                          const diffTime = expiry - today;
+                          const daysLeft = Math.ceil(
+                            diffTime / (1000 * 60 * 60 * 24),
+                          );
+                          const getExpiryColor = (daysLeft) => {
+                            if (daysLeft <= 2) return "#ff1717";
+                            if (daysLeft <= 6) return "#ff7723";
+                            return "#50863F";
+                          };
 
-                  const diffTime = expiry - today;
-                  const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                          const renderRightActions = () => (
+                            <TouchableOpacity
+                              style={styles.deleteAction}
+                              onPress={() => deleteIngredient(ingredient._id)}
+                            >
+                              <Ionicons name="trash-outline" size={20} color="white" />
+                            </TouchableOpacity>
+                          );
 
-                  return (
-                    <ExpiringWidget
-                      key={item._id}
-                      image={require("../assets/foodplaceholders/mschicken.png")}
-                      name={item.IngredientName}
-                      expireMessage={`This item is expiring in ${daysLeft} days!`}
-                      expiringIn={`${daysLeft} days`}
-                      dateStyling={{
-                        backgroundColor:
-                          daysLeft <= 2
-                            ? "#ff1717"
-                            : daysLeft <= 6
-                              ? "#ff7723"
-                              : "#50863F",
-                        justifyContent: "center",
-                        paddingLeft: 10,
-                        paddingRight: 10,
-                        height: 33,
-                        marginTop: 5,
-                        borderRadius: 10,
-                      }}
-                    />
-                  );
-                })
-              ) : (
-                <Text>Please add items to get started</Text>
-              )}
-            </View>
-          </ScrollView>
-        </View>
+                          return (
+                            <Swipeable key={ingredient._id} renderRightActions={renderRightActions}>
+                              <ExpiringWidget
+                                key={ingredient._id}
+                                image={require("../assets/foodplaceholders/mschicken.png")}
+                                name={ingredient.IngredientName}
+                                expireMessage={`This item is expiring in ${daysLeft} days!`}
+                                expiringIn={`${daysLeft} days`}
+                                dateStyling={{
+                                  backgroundColor: getExpiryColor(daysLeft),
+                                  justifyContent: "center",
+                                  paddingLeft: 10,
+                                  paddingRight: 10,
+                                  height: 33,
+                                  marginTop: 5,
+                                  borderRadius: 10,
+                                }}
+                              />
+                            </Swipeable>
+                          );
+                        })}
+                      </View>
+                    );
+                  })
+                ) : category === "Expiry date" ? (
+                  sortedItems.map((item) => {
+                    const today = new Date();
+                    const expiry = new Date(item.ExpiryDate);
+
+                    const diffTime = expiry - today;
+                    const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                    const renderRightActions = () => (
+                      <TouchableOpacity
+                        style={styles.deleteAction}
+                        onPress={() => deleteIngredient(item._id)}
+                      >
+                        <Ionicons name="trash-outline" size={20} color="white" />
+                      </TouchableOpacity>
+                    );
+                    return (
+                      <Swipeable key={item._id} renderRightActions={renderRightActions}>
+                        <ExpiringWidget
+                          key={item._id}
+                          image={require("../assets/foodplaceholders/mschicken.png")}
+                          name={item.IngredientName}
+                          expireMessage={`This item is expiring in ${daysLeft} days!`}
+                          expiringIn={`${daysLeft} days`}
+                          dateStyling={{
+                            backgroundColor:
+                              daysLeft <= 2
+                                ? "#ff1717"
+                                : daysLeft <= 6
+                                  ? "#ff7723"
+                                  : "#50863F",
+                            justifyContent: "center",
+                            paddingLeft: 10,
+                            paddingRight: 10,
+                            height: 33,
+                            marginTop: 5,
+                            borderRadius: 10,
+                          }}
+                        />
+                      </Swipeable>
+                    );
+                  })
+                ) : (
+                  <Text>Please add items to get started</Text>
+                )}
+              </View>
+            </ScrollView>
+          </View>
+        </GestureHandlerRootView>
       </Modal>
     </>
   );
@@ -657,5 +682,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
+  },
+
+  deleteAction: {
+    backgroundColor: "#e53935",
+    justifyContent: "center",
+    alignItems: "center",
+    width: 70,
+    borderRadius: 6,
+    marginVertical: 2,
+    maxHeight: "83%"
   },
 });
