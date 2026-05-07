@@ -2,6 +2,12 @@ import { View, Text, Image } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 
 export default function ExpiringWidget({ image, name, expireMessage, expiringIn, dateStyling }){
+    const truncateToWords = (text, maxWords = 5) => {
+        const words = text.trim().split(/\s+/);
+        if (words.length <= maxWords) return text;
+        return words.slice(0, maxWords).join(' ') + '...';
+    };
+
     return(
         <View style={{ 
             flexDirection: "row", marginBottom: 20, 
@@ -11,7 +17,7 @@ export default function ExpiringWidget({ image, name, expireMessage, expiringIn,
         }}>
             <Image source={image} style={{ width: 60, height: 60 }}></Image>
             <View style={{ flexDirection: "column", flexShrink: 1 }}>
-                <Text style={{fontSize: RFValue(13), marginBottom: 5, fontFamily: 'Inter_500Medium', flexWrap: 'wrap'}}>{name}</Text>
+                <Text style={{fontSize: RFValue(13), marginBottom: 5, fontFamily: 'Inter_500Medium', flexWrap: 'wrap'}}>{truncateToWords(name)}</Text>
                 <Text style={{ fontSize: RFValue(9), width: "70%", color: "#8E8E8E"}}>{expireMessage}</Text>
             </View>
             <View style={dateStyling}>
