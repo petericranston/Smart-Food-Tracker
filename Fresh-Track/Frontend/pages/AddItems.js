@@ -19,8 +19,12 @@ import ReceiptScanner from "../components/ReceiptScanner";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import OpenAI from "openai";
-import { CameraView, useCameraPermissions } from 'expo-camera';
-
+import { CameraView, useCameraPermissions } from "expo-camera";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import {
+  Swipeable,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
 
 const openai = new OpenAI({
   apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
@@ -28,13 +32,11 @@ const openai = new OpenAI({
 });
 
 export default function AddItems() {
-
   const [username, setUsername] = useState("");
   useEffect(() => {
     const loadUser = async () => {
       const savedUsername = await AsyncStorage.getItem("username");
       if (savedUsername) setUsername(savedUsername);
-
     };
     loadUser();
   }, []);
@@ -42,13 +44,13 @@ export default function AddItems() {
   const today = new Date();
   const currentDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
-
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
   const insets = useSafeAreaInsets();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResponse, setSearchResponse] = useState(null);
   const [scannedItems, setScannedItems] = useState([]);
+  const [savedItems, setSavedItems] = useState(false);
 
   // Modal visibles
   const [receiptVisible, setReceiptVisible] = useState(false);
@@ -62,6 +64,33 @@ export default function AddItems() {
   const [barcodeLoading, setBarcodeLoading] = useState(false);
   const [barcodeError, setBarcodeError] = useState(null);
   const scanLock = useRef(false);
+
+  // scrollable date
+  const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const [editingItemId, setEditingItemId] = useState(null);
+  const [tempDate, setTempDate] = useState(new Date());
+
+  function openDatePicker(item) {
+    const initial = item.expiryDate ? new Date(item.expiryDate) : new Date();
+    setTempDate(initial);
+    setEditingItemId(item.id);
+    setDatePickerVisible(true);
+  }
+
+  function confirmDateEdit(selectedDate) {
+    if (!selectedDate) {
+      setDatePickerVisible(false);
+      return;
+    }
+    const formatted = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
+    setScannedItems((prev) =>
+      prev.map((item) =>
+        item.id === editingItemId ? { ...item, expiryDate: formatted } : item,
+      ),
+    );
+    setDatePickerVisible(false);
+    setEditingItemId(null);
+  }
 
   const formatExpiry = (expiryDate) => {
     if (!expiryDate) return "-/-";
@@ -110,15 +139,15 @@ export default function AddItems() {
 
   async function handleBarcodeScan({ data }) {
     if (scanLock.current) return;
-    scanLock.current = true;  // blocks instantly, no async delay
+    scanLock.current = true; // blocks instantly, no async delay
     setScanned(true);
     setBarcodeLoading(true);
     setBarcodeError(null);
 
     try {
       const response = await fetch(`${API_URL}/api/getProductByBarcode`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ barcode: data }),
       });
       const product = await response.json();
@@ -137,7 +166,7 @@ export default function AddItems() {
   }
 
   function resetBarcodeModal() {
-    scanLock.current = false;  // reset the lock too
+    scanLock.current = false; // reset the lock too
     setScanned(false);
     setBarcodeProduct(null);
     setBarcodeError(null);
@@ -158,6 +187,7 @@ export default function AddItems() {
     - No extra text
     - No extra keys
     - If a value is missing, use null
+    - Return a single emoji that best represents each product as "emoji"
 
     Current date:
     - currentDate = ${currentDate}
@@ -245,7 +275,8 @@ export default function AddItems() {
       "food_group": null,
       "storage_state": null,
       "predicted_expiry_date": null,
-      "expiration_date_rating": null
+      "expiration_date_rating": null,
+      "emoji": null,
     }
     `;
 
@@ -273,6 +304,7 @@ export default function AddItems() {
           unit: null,
           foodGroup: parsedResults.food_group,
           storageState: parsedResults.storage_state,
+          emoji: parsedResults.emoji,
         },
       ]);
     } catch (error) {
@@ -305,98 +337,130 @@ export default function AddItems() {
     }
   }
 
+  function deleteItem(id) {
+    setScannedItems((prev) => prev.filter((item) => item.id !== id));
+  }
+
   return (
     <>
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.h1}>Add items</Text>
-        <Text style={styles.h2}>Choose how to add your food</Text>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaView style={styles.container}>
+          <Text style={styles.h1}>Add items</Text>
+          <Text style={styles.h2}>Choose how to add your food</Text>
 
-        <View style={{ alignItems: "center", marginTop: 15 }}>
-          <View style={{ flexDirection: "row", gap: 20, marginBottom: 23 }}>
+          <View style={{ alignItems: "center", marginTop: 15 }}>
+            <View style={{ flexDirection: "row", gap: 20, marginBottom: 23 }}>
+              <ItemInput
+                inputChoice={"Scan receipt"}
+                onPressFunction={() => setReceiptVisible(true)}
+              >
+                <Ionicons name="receipt-outline" color="white" size={40} />
+              </ItemInput>
+              <ItemInput
+                inputChoice={"Scan barcode"}
+                onPressFunction={() => setBarcodeVisible(true)}
+              >
+                <Ionicons name="barcode-outline" size={40} color="white" />
+              </ItemInput>
+            </View>
+
             <ItemInput
-              inputChoice={"Scan receipt"}
-              onPressFunction={() => setReceiptVisible(true)}
+              inputChoice={"Search item"}
+              onPressFunction={() => setSearchVisible(true)}
             >
-              <Ionicons name="receipt-outline" color="white" size={40} />
-            </ItemInput>
-            <ItemInput
-              inputChoice={"Scan barcode"}
-              onPressFunction={() => setBarcodeVisible(true)}
-            >
-              <Ionicons name="barcode-outline" size={40} color="white" />
+              <Feather name="search" size={40} color="white" />
             </ItemInput>
           </View>
 
-          <ItemInput
-            inputChoice={"Search item"}
-            onPressFunction={() => setSearchVisible(true)}
-          >
-            <Feather name="search" size={40} color="white" />
-          </ItemInput>
-        </View>
-
-        {/* Divider line */}
-        <View
-          style={{
-            height: 1,
-            backgroundColor: "#B5B5B549",
-            marginTop: 25,
-            shadowColor: "#000000",
-            shadowOffset: { width: 2, height: 2 },
-            shadowOpacity: 0.8,
-            shadowRadius: 4,
-            elevation: 4,
-          }}
-        />
-
-        <View
-          style={{
-            marginTop: 25,
-            padding: 15,
-            borderColor: "#B5B5B550",
-            borderWidth: 2,
-            maxHeight: 200,
-            minHeight: 50,
-          }}
-        >
-          <FlatList
-            data={scannedItems}
-            keyExtractor={(item) => item.id.toString()}
-            ListEmptyComponent={
-              <Text style={{ textAlign: "center", fontSize: RFValue(14) }}>
-                Added items will show here!
-              </Text>
-            }
-            renderItem={({ item }) => {
-              const displayUnit = item.unit
-                ? `${item.foodQuantity} x ${item.unit}`
-                : `${item.foodQuantity} x`;
-              return (
-                <View style={styles.itemsRow}>
-                  <Text
-                    numberOfLines={3}
-                    style={{ fontSize: RFValue(14), width: "70%" }}
-                  >
-                    {displayUnit} {item.name}
-                  </Text>
-                  <Text style={{ color: "#888", fontSize: RFValue(14) }}>
-                    {formatExpiry(item.expiryDate)}
-                  </Text>
-
-                </View>
-              );
+          {/* Divider line */}
+          <View
+            style={{
+              height: 1,
+              backgroundColor: "#B5B5B549",
+              marginTop: 25,
+              shadowColor: "#000000",
+              shadowOffset: { width: 2, height: 2 },
+              shadowOpacity: 0.8,
+              shadowRadius: 4,
+              elevation: 4,
             }}
           />
-        </View>
-        <TouchableOpacity
-          style={styles.saveItems}
-          onPress={() => saveIngredients(scannedItems)}
-        >
-          <Ionicons name="checkmark-circle-outline" color="white" size={20} />
-          <Text style={styles.saveItemsText}>Save Items</Text>
-        </TouchableOpacity>
-      </SafeAreaView>
 
+          <View
+            style={{
+              marginTop: 25,
+              padding: 15,
+              borderColor: "#B5B5B550",
+              borderWidth: 2,
+              maxHeight: 200,
+              minHeight: 50,
+            }}
+          >
+            <FlatList
+              data={scannedItems}
+              keyExtractor={(item) => item.id.toString()}
+              ListEmptyComponent={
+                <Text style={{ textAlign: "center", fontSize: RFValue(14) }}>
+                  Added items will show here, swipe left on the date to delete!
+                </Text>
+              }
+              renderItem={({ item }) => {
+                const displayUnit = item.unit
+                  ? `${item.foodQuantity} x ${item.unit}`
+                  : `${item.foodQuantity} x`;
+
+                const renderRightActions = () => (
+                  <TouchableOpacity
+                    style={styles.deleteAction}
+                    onPress={() => deleteItem(item.id)}
+                  >
+                    <Ionicons name="trash-outline" size={20} color="white" />
+                  </TouchableOpacity>
+                );
+                return (
+                  <Swipeable renderRightActions={renderRightActions}>
+                    <View style={styles.itemsRow}>
+                      <Text
+                        numberOfLines={3}
+                        style={{ fontSize: RFValue(14), width: "70%" }}
+                      >
+                        {displayUnit} {item.name}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => openDatePicker(item)}
+                        style={styles.expiryPill}
+                      >
+                        <Feather
+                          name="edit-2"
+                          size={10}
+                          color="#50863F"
+                          style={{ marginRight: 4 }}
+                        />
+                        <Text style={{ color: "#888", fontSize: RFValue(14) }}>
+                          {formatExpiry(item.expiryDate)}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </Swipeable>
+                );
+              }}
+            />
+          </View>
+          <TouchableOpacity
+            style={styles.saveItems}
+            onPress={() => {
+              saveIngredients(scannedItems);
+              setSavedItems(true);
+              setTimeout(() => setSavedItems(false), 2000);
+            }}
+          >
+            <Ionicons name="checkmark-circle-outline" color="white" size={20} />
+            <Text style={styles.saveItemsText}>
+              {savedItems ? "Items Saved!" : "Save Items"}
+            </Text>
+          </TouchableOpacity>
+        </SafeAreaView>
+      </GestureHandlerRootView>
 
       {/* ---------Modals--------- */}
 
@@ -432,6 +496,7 @@ export default function AddItems() {
                 storageState: product.storage_state,
                 foodQuantity: product.number_of_products,
                 unit: null,
+                emoji: product.emoji,
               }));
               setScannedItems(mapped);
               setReceiptVisible(false);
@@ -439,7 +504,6 @@ export default function AddItems() {
           />
         </View>
       </Modal>
-
 
       {/* Barcode modal */}
       <Modal
@@ -465,11 +529,13 @@ export default function AddItems() {
               <Text style={barcodeStyles.permissionText}>
                 Camera access is needed to scan barcodes
               </Text>
-              <TouchableOpacity style={styles.saveBtn} onPress={requestPermission}>
+              <TouchableOpacity
+                style={styles.saveBtn}
+                onPress={requestPermission}
+              >
                 <Text style={styles.saveBtnText}>Grant Permission</Text>
               </TouchableOpacity>
             </View>
-
           ) : !scanned ? (
             /* Camera view */
             <View style={barcodeStyles.cameraWrapper}>
@@ -477,33 +543,53 @@ export default function AddItems() {
                 style={StyleSheet.absoluteFillObject}
                 facing="back"
                 onBarcodeScanned={handleBarcodeScan}
-                barcodeScannerSettings={{ barcodeTypes: ["ean13", "ean8", "upc_a", "upc_e"] }}
+                barcodeScannerSettings={{
+                  barcodeTypes: ["ean13", "ean8", "upc_a", "upc_e"],
+                }}
               />
               {/* Viewfinder overlay */}
               <View style={barcodeStyles.overlay}>
                 <View style={barcodeStyles.viewfinder}>
                   <View style={[barcodeStyles.corner, barcodeStyles.topLeft]} />
-                  <View style={[barcodeStyles.corner, barcodeStyles.topRight]} />
-                  <View style={[barcodeStyles.corner, barcodeStyles.bottomLeft]} />
-                  <View style={[barcodeStyles.corner, barcodeStyles.bottomRight]} />
+                  <View
+                    style={[barcodeStyles.corner, barcodeStyles.topRight]}
+                  />
+                  <View
+                    style={[barcodeStyles.corner, barcodeStyles.bottomLeft]}
+                  />
+                  <View
+                    style={[barcodeStyles.corner, barcodeStyles.bottomRight]}
+                  />
                 </View>
-                <Text style={barcodeStyles.overlayHint}>Align barcode within the frame</Text>
+                <Text style={barcodeStyles.overlayHint}>
+                  Align barcode within the frame
+                </Text>
               </View>
             </View>
-
           ) : barcodeLoading ? (
             /* Loading state */
             <View style={barcodeStyles.centreBox}>
-              <Text style={barcodeStyles.loadingText}>Looking up product...</Text>
+              <Text style={barcodeStyles.loadingText}>
+                Looking up product...
+              </Text>
             </View>
-
           ) : barcodeError ? (
             /* Error / not found state */
             <View style={barcodeStyles.centreBox}>
               <Ionicons name="alert-circle-outline" size={48} color="#888" />
               <Text style={barcodeStyles.permissionText}>{barcodeError}</Text>
-              <TouchableOpacity style={styles.saveBtn} onPress={resetBarcodeModal}>
-                <Text style={[styles.saveBtnText, { paddingLeft: 10, paddingRight: 10 }]}>Scan Again</Text>
+              <TouchableOpacity
+                style={styles.saveBtn}
+                onPress={resetBarcodeModal}
+              >
+                <Text
+                  style={[
+                    styles.saveBtnText,
+                    { paddingLeft: 10, paddingRight: 10 },
+                  ]}
+                >
+                  Scan Again
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.saveBtn, barcodeStyles.secondaryBtn]}
@@ -513,10 +599,11 @@ export default function AddItems() {
                   setSearchVisible(true);
                 }}
               >
-                <Text style={[styles.saveBtnText, { color: "#50863F" }]}>Search Manually</Text>
+                <Text style={[styles.saveBtnText, { color: "#50863F" }]}>
+                  Search Manually
+                </Text>
               </TouchableOpacity>
             </View>
-
           ) : barcodeProduct ? (
             /* Product found state */
             <View style={barcodeStyles.productBox}>
@@ -529,10 +616,13 @@ export default function AddItems() {
               <View style={styles.resultCard}>
                 <View style={styles.resultRow}>
                   <View style={styles.productInfo}>
-                    <Text style={styles.productName}>{barcodeProduct.name}</Text>
+                    <Text style={styles.productName}>
+                      {barcodeProduct.name}
+                    </Text>
                     {barcodeProduct.brand && (
-                      <Text style={styles.productBrand}>{barcodeProduct.brand}</Text>
-
+                      <Text style={styles.productBrand}>
+                        {barcodeProduct.brand}
+                      </Text>
                     )}
                   </View>
                 </View>
@@ -547,14 +637,18 @@ export default function AddItems() {
                   <Text style={styles.saveBtnText}>+ Add to Pantry</Text>
                 </TouchableOpacity>
               </View>
-              <TouchableOpacity onPress={resetBarcodeModal} style={barcodeStyles.scanAgainLink}>
-                <Text style={barcodeStyles.scanAgainText}>Scan a different product</Text>
+              <TouchableOpacity
+                onPress={resetBarcodeModal}
+                style={barcodeStyles.scanAgainLink}
+              >
+                <Text style={barcodeStyles.scanAgainText}>
+                  Scan a different product
+                </Text>
               </TouchableOpacity>
             </View>
           ) : null}
         </View>
       </Modal>
-
 
       {/* Search modal */}
       <Modal
@@ -613,6 +707,37 @@ export default function AddItems() {
                 </View>
               ))}
           </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Date picker modal */}
+      <Modal
+        visible={datePickerVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setDatePickerVisible(false)}
+      >
+        <View style={styles.datePickerOverlay}>
+          <View style={styles.datePickerSheet}>
+            <View style={styles.datePickerHeader}>
+              <TouchableOpacity onPress={() => setDatePickerVisible(false)}>
+                <Text style={styles.datePickerCancel}>Cancel</Text>
+              </TouchableOpacity>
+              <Text style={styles.datePickerTitle}>Edit Expiry Date</Text>
+              <TouchableOpacity onPress={() => confirmDateEdit(tempDate)}>
+                <Text style={styles.datePickerDone}>Done</Text>
+              </TouchableOpacity>
+            </View>
+            <DateTimePicker
+              value={tempDate}
+              mode="date"
+              display="spinner"
+              onChange={(_, selected) => selected && setTempDate(selected)}
+              minimumDate={new Date()}
+              style={{ width: "100%" }}
+              textColor="#000"
+            />
+          </View>
         </View>
       </Modal>
     </>
@@ -753,6 +878,63 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_600SemiBold",
     letterSpacing: 0.5,
   },
+  expiryPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#7E9E7430",
+    borderWidth: 1,
+    borderColor: "#50863F60",
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  expiryPillText: {
+    color: "#50863F",
+    fontSize: RFValue(12),
+    fontFamily: "Inter_600SemiBold",
+  },
+  datePickerOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "#00000055",
+  },
+  datePickerSheet: {
+    backgroundColor: "#F8F5EC",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 30,
+  },
+  datePickerHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#B5B5B549",
+  },
+  datePickerTitle: {
+    fontSize: RFValue(14),
+    fontFamily: "Inter_600SemiBold",
+  },
+  datePickerCancel: {
+    fontSize: RFValue(14),
+    color: "#707070",
+    fontFamily: "Inter_500Medium",
+  },
+  datePickerDone: {
+    fontSize: RFValue(14),
+    color: "#50863F",
+    fontFamily: "Inter_600SemiBold",
+  },
+  deleteAction: {
+    backgroundColor: "#e53935",
+    justifyContent: "center",
+    alignItems: "center",
+    width: 70,
+    borderRadius: 6,
+    marginVertical: 2,
+  },
 });
 
 const barcodeStyles = StyleSheet.create({
@@ -761,55 +943,55 @@ const barcodeStyles = StyleSheet.create({
     marginHorizontal: 16,
     height: 280,
     borderRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 1,
-    borderColor: '#2a2d3a',
+    borderColor: "#2a2d3a",
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     gap: 16,
   },
   viewfinder: {
     width: 220,
     height: 120,
-    position: 'relative',
+    position: "relative",
   },
   corner: {
-    position: 'absolute',
+    position: "absolute",
     width: 20,
     height: 20,
-    borderColor: '#F8F5EC',
+    borderColor: "#F8F5EC",
     borderWidth: 3,
   },
-  topLeft:     { top: 0, left: 0,  borderRightWidth: 0, borderBottomWidth: 0 },
-  topRight:    { top: 0, right: 0, borderLeftWidth: 0,  borderBottomWidth: 0 },
-  bottomLeft:  { bottom: 0, left: 0,  borderRightWidth: 0, borderTopWidth: 0 },
-  bottomRight: { bottom: 0, right: 0, borderLeftWidth: 0,  borderTopWidth: 0 },
+  topLeft: { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0 },
+  topRight: { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0 },
+  bottomLeft: { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0 },
+  bottomRight: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0 },
   overlayHint: {
-    color: '#F8F5EC',
+    color: "#F8F5EC",
     fontSize: RFValue(12),
-    fontFamily: 'Inter_500Medium',
-    textAlign: 'center',
+    fontFamily: "Inter_500Medium",
+    textAlign: "center",
   },
   centreBox: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     gap: 16,
     paddingHorizontal: 30,
   },
   permissionText: {
     fontSize: RFValue(13),
-    color: '#707070',
-    fontFamily: 'Inter_500Medium',
-    textAlign: 'center',
+    color: "#707070",
+    fontFamily: "Inter_500Medium",
+    textAlign: "center",
   },
   loadingText: {
     fontSize: RFValue(14),
-    color: '#707070',
-    fontFamily: 'Inter_500Medium',
+    color: "#707070",
+    fontFamily: "Inter_500Medium",
   },
   productBox: {
     flex: 1,
@@ -820,25 +1002,24 @@ const barcodeStyles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 12,
-    alignSelf: 'center',
+    alignSelf: "center",
     marginBottom: 16,
-    backgroundColor: '#0f1117',
+    backgroundColor: "#0f1117",
   },
   secondaryBtn: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     borderWidth: 1,
-    borderColor: '#50863F',
-    padding: 10
+    borderColor: "#50863F",
+    padding: 10,
   },
   scanAgainLink: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 16,
   },
   scanAgainText: {
-    color: '#50863F',
+    color: "#50863F",
     fontSize: RFValue(13),
-    fontFamily: 'Inter_500Medium',
-    textDecorationLine: 'underline',
+    fontFamily: "Inter_500Medium",
+    textDecorationLine: "underline",
   },
 });
-

@@ -4,21 +4,22 @@ const bcrypt = require("bcrypt");
 const { Schema, model } = mongoose;
 
 const recipeIngredientsSchema = new Schema({
-  ingredient: String,
-});
-
-const recipeStepsSchema = new Schema({
-  step: String,
+  name: String,
+  amount: String,
+  expiryDate: String,
 });
 
 const recipeSchema = new Schema({
-  dishEmoji: String,
+  recipeEmoji: String,
   name: String,
-  time: String,
-  serves: Number,
-  ingredientsNum: Number,
-  ingredientsList: [recipeIngredientsSchema],
-  steps: [recipeStepsSchema],
+  estimatedTime: String,
+  peopleServed: Number,
+  numberOfIngredients: Number,
+  priorityScore: Number,
+  favourite: Boolean,
+  ingredientsUsed: [recipeIngredientsSchema],
+  missingIngredients: [{ name: String, amount: String }],
+  steps: [String],
 });
 
 const ingredientSchema = new Schema({
@@ -70,6 +71,7 @@ async function addIngredients(id, ingredients) {
       Unit: item.unit || null,
       FoodGroup: item.foodGroup || null,
       StorageState: item.storageState || null,
+      Emoji: item.emoji || null,
     }));
     const result = await userData.updateOne(
       { _id: id },
@@ -98,8 +100,27 @@ async function saveRecipe(id, savedRecipe) {
 
 async function getIngredients(id) {
   try {
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+
+    // auto delete anything expired by more than 2 days
+    await userData.updateOne(
+      { _id: id },
+      { $pull: { Ingredients: { ExpiryDate: { $lt: twoDaysAgo } } } },
+    );
+
     const user = await userData.findById(id, "Ingredients");
     return user.Ingredients;
+  } catch (err) {
+    console.log("Error:", err);
+    return false;
+  }
+}
+
+async function getRecipes(id) {
+  try {
+    const user = await userData.findById(id, "savedRecipes");
+    return user.savedRecipes;
   } catch (err) {
     console.log("Error:", err);
     return false;
@@ -130,11 +151,38 @@ async function checkUser(username, password) {
   return user;
 }
 
+async function deleteIngredient(userId, ingredientId) {
+  return await userData.updateOne(
+    { _id: userId },
+    // $pull means to remove {whatever is in here}
+    {
+      $pull: {
+        Ingredients: { _id: new mongoose.Types.ObjectId(ingredientId) },
+      },
+    },
+  );
+}
+
+async function deleteRecipe(userId, recipeId) {
+  return await userData.updateOne(
+    { _id: userId },
+    // $pull means to remove {whatever is in here}
+    {
+      $pull: {
+        savedRecipes: { _id: new mongoose.Types.ObjectId(recipeId) },
+      },
+    },
+  );
+}
+
 module.exports = {
   newUser,
   addIngredients,
   getUserByUsername,
   getIngredients,
+  getRecipes,
   checkUser,
   saveRecipe,
+  deleteIngredient,
+  deleteRecipe,
 };

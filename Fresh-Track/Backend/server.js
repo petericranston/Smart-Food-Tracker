@@ -54,7 +54,7 @@ app.post("/api/searchProduct", async (request, response) => {
   response.json(results);
 });
 
-app.post('/api/getProductByBarcode', async (req, res) => {
+app.post("/api/getProductByBarcode", async (req, res) => {
   const { barcode } = req.body;
   const product = await GetProductByBarcode(barcode);
   if (!product) return res.json(null);
@@ -93,6 +93,22 @@ app.post("/api/saveRecipe", async (request, response) => {
   }
 });
 
+app.post("/api/deleteRecipe", async (request, response) => {
+  try {
+    const { username, savedRecipe } = request.body;
+
+    const user = await database.getUserByUsername(username);
+    if (!user) return response.status(404).json({ error: "User not found" });
+
+    await database.deleteRecipe(user._id, savedRecipe._id);
+
+    response.json({ success: true });
+  } catch (err) {
+    console.log(err);
+    response.status(500).json({ error: "Server error" });
+  }
+});
+
 app.post("/api/getIngredients", async (request, response) => {
   try {
     const { username } = request.body;
@@ -109,6 +125,38 @@ app.post("/api/getIngredients", async (request, response) => {
   }
 });
 
+app.post("/api/getSavedRecipes", async (request, response) => {
+  try {
+    const { username } = request.body;
+
+    const user = await database.getUserByUsername(username);
+    if (!user) return response.status(404).json({ error: "User not found" });
+
+    const recipes = await database.getRecipes(user._id);
+
+    response.json(recipes);
+  } catch (err) {
+    console.log(err);
+    response.status(500).json({ error: "Server error" });
+  }
+});
+
 app.listen(3001, "0.0.0.0", () => {
   console.log("Server running on port 3001");
+});
+
+app.delete("/api/deleteIngredient", async (request, response) => {
+  try {
+    const { username, ingredientId } = request.body;
+
+    const user = await database.getUserByUsername(username);
+    if (!user) return response.status(404).json({ error: "User not found" });
+
+    await database.deleteIngredient(user._id, ingredientId);
+
+    response.json({ success: true });
+  } catch (err) {
+    console.log(err);
+    response.status(500).json({ error: "Server error" });
+  }
 });

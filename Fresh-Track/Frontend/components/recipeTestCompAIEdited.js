@@ -1,5 +1,6 @@
 import OpenAI from "openai";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+
 import {
   ActivityIndicator,
   Alert,
@@ -11,32 +12,23 @@ import {
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 
-export default function RecipeTestCompAIEdited({ onRecipeGeneration }) {
+export default function RecipeTestCompAIEdited({
+  ingredients,
+  onRecipeGeneration,
+}) {
+  const hasAutoTriggered = useRef(false);
+
   const openai = new OpenAI({
     apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
     dangerouslyAllowBrowser: true,
   });
 
-  const ingredients = [
-    { name: "chicken breast", expiryDate: "2026-04-22" },
-    { name: "minced beef", expiryDate: "2026-04-23" },
-    { name: "salmon fillet", expiryDate: "2026-04-24" },
-
-    { name: "milk", expiryDate: "2026-04-22" },
-    { name: "cheddar cheese", expiryDate: "2026-04-28" },
-    { name: "double cream", expiryDate: "2026-04-25" },
-
-    { name: "pasta", expiryDate: "2026-06-01" },
-    { name: "rice", expiryDate: "2026-07-10" },
-    { name: "bread", expiryDate: "2026-04-21" },
-
-    { name: "spinach", expiryDate: "2026-04-22" },
-    { name: "broccoli", expiryDate: "2026-04-23" },
-    { name: "bell pepper", expiryDate: "2026-04-24" },
-
-    { name: "eggs", expiryDate: "2026-05-02" },
-    { name: "butter", expiryDate: "2026-05-10" },
-  ];
+  useEffect(() => {
+    if (ingredients.length > 0 && !hasAutoTriggered.current) {
+      hasAutoTriggered.current = true;
+      handleTest();
+    }
+  }, [ingredients]);
 
   function formatDateDDMMYYYY(date = new Date()) {
     const dd = String(date.getDate()).padStart(2, "0");
@@ -51,9 +43,11 @@ export default function RecipeTestCompAIEdited({ onRecipeGeneration }) {
   }
 
   function sortByExpiry(items) {
-    return [...items].sort(
-      (a, b) => parseDDMMYYYY(a.expiryDate) - parseDDMMYYYY(b.expiryDate),
-    );
+    return [...items].sort((a, b) => {
+      if (!a.expiryDate) return 1;
+      if (!b.expiryDate) return -1;
+      return new Date(a.expiryDate) - new Date(b.expiryDate);
+    });
   }
 
   function safeParseJson(text) {
@@ -147,7 +141,7 @@ ${JSON.stringify(sortedIngredients, null, 2)}
       const result = await openai.chat.completions.create({
         model: "gpt-4o",
         temperature: 0,
-        max_tokens: 1000,
+        max_tokens: 2500,
         messages: [
           {
             role: "user",
@@ -191,60 +185,20 @@ ${JSON.stringify(sortedIngredients, null, 2)}
 
     setLoading(false);
   };
-
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Generate Your Recipes!</Text>
-
-      <TouchableOpacity
-        style={[styles.btn, loading && styles.btnDisabled]}
-        onPress={handleTest}
-        disabled={loading}
-      >
-        <Text style={styles.btnText}>
-          {loading ? "Generating..." : "Generate Recipe"}
-        </Text>
-      </TouchableOpacity>
-
-      {loading && <ActivityIndicator size="large" style={styles.loader} />}
-
-      {recipes.map((recipe, index) => (
-        <View key={index} style={styles.recipeCard}>
-          <Text style={styles.recipeTitle}>{recipe.name}</Text>
-          <Text style={styles.recipeText}>
-            Priority Score: {recipe.priorityScore}
-          </Text>
-          <Text style={styles.recipeText}>
-            Estimated Time: {recipe.estimatedTime}
-          </Text>
-
-          <Text style={styles.sectionTitle}>Ingredients Used:</Text>
-          {recipe.ingredientsUsed?.map((item, itemIndex) => (
-            <Text key={itemIndex} style={styles.recipeText}>
-              {item.name} ({item.amount}) - {item.expiryDate}
-            </Text>
-          ))}
-
-          <Text style={styles.sectionTitle}>Missing Ingredients:</Text>
-          {recipe.missingIngredients?.length ? (
-            recipe.missingIngredients.map((item, itemIndex) => (
-              <Text key={itemIndex} style={styles.recipeText}>
-                {item.name} ({item.amount})
-              </Text>
-            ))
-          ) : (
-            <Text style={styles.recipeText}>• None</Text>
-          )}
-
-          <Text style={styles.sectionTitle}>Steps:</Text>
-          {recipe.steps?.map((step, stepIndex) => (
-            <Text key={stepIndex} style={styles.recipeText}>
-              {stepIndex + 1}. {step}
-            </Text>
-          ))}
-        </View>
-      ))}
-    </ScrollView>
+    <View style={{ alignItems: "center", marginBottom: 10 }}>
+      {loading ? (
+        <ActivityIndicator
+          size="large"
+          color="#50863F"
+          style={{ marginBottom: 20 }}
+        />
+      ) : (
+        <TouchableOpacity style={styles.btn} onPress={handleTest}>
+          <Text style={styles.btnText}>↺ Regenerate Recipes</Text>
+        </TouchableOpacity>
+      )}
+    </View>
   );
 }
 
@@ -258,13 +212,6 @@ const styles = StyleSheet.create({
     fontSize: RFValue(24),
     fontFamily: "Inter_600SemiBold",
     marginBottom: 16,
-  },
-  btn: {
-    backgroundColor: "#111",
-    padding: 16,
-    borderRadius: 12,
-    alignItems: "center",
-    marginBottom: 20,
   },
   btnDisabled: {
     backgroundColor: "#555",
@@ -301,5 +248,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginTop: 10,
     marginBottom: 6,
+  },
+  btn: {
+    backgroundColor: "#50863F",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    alignItems: "center",
+    marginBottom: 20,
   },
 });

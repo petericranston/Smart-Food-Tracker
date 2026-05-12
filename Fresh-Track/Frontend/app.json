@@ -34,7 +34,8 @@
         {
           "cameraPermission": "FreshTrack needs camera access to scan barcodes."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ]
   }
 }
