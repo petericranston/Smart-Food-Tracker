@@ -160,3 +160,21 @@ app.delete("/api/deleteIngredient", async (request, response) => {
     response.status(500).json({ error: "Server error" });
   }
 });
+
+app.put("/api/useIngredient", async (request,response) => {
+  try{
+    const {userId, ingredientId} = request.body;
+    const used = await database.useIngredient(userId,ingredientId);
+
+    response.json({
+      success : true,
+      message: "Ingredient Used",
+      used
+    });
+  } catch (err){
+    console.log(err);
+    response.status(500).json({
+      success: false,
+    })
+  }
+})

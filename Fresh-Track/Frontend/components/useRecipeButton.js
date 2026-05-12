@@ -9,18 +9,29 @@ import {
 } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 
+
+
 export default function UseRecipeButton({recipe}){
 
-    const handlePress = () => {
-        console.log('hello')
-
+    const handlePress = async () => {
+        console.log('hello');
+        recipe.usedIngredients;
+        for(const ingredient of recipe.usedIngredients){ //for each ingredient in recipe
+            await fetch(`${API_URL}/api/useIngredient`, { //runs useIngredient function through express route
+                method: "PUT",
+                headers: {
+                    "Content-Type" : "application/json"
+                },
+                body : JSON.stringify({
+                    userId,
+                    ingredientId: ingredient._id
+                })
+            });
+        }
         //get the recipe ID and the IDs for each of the ingredients in it
         //run query function to update the ingredients used field based on the ID from recipe.
     }
 
-    // if (!isSaved){
-    //     return null;
-    // }
 
 
     return(

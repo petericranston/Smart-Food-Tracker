@@ -84,9 +84,8 @@ export default function RecipeDetail({ recipe, onClose }) {
             ))}
             {/* button here */}
             <UseRecipeButton
-              recipeID={recipe.id}
-              userId={user.id}
-              isSaved={isSaved}
+              recipe={recipe}
+              // userId={user.id} //might need not sure
             />
 
           </View>

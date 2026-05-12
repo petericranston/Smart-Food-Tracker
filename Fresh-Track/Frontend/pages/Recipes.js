@@ -245,7 +245,7 @@ export default function Recipes() {
       {selectedRecipe && (
         <RecipeDetail
           recipe={selectedRecipe}
-          onClose={() => setSelectedRecipe(null)}
+          onClose={() => setSelectedRecipe(null)}      
         />
       )}
     </>

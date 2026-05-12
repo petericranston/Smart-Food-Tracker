@@ -151,6 +151,21 @@ async function checkUser(username, password) {
   return user;
 }
 
+//function to 'use' single ingredient
+async function useIngredient(userId,ingredientId){
+  return await userData.updateOne(
+    {
+      _id:userId,
+      "Ingredients._id": new mongoose.Types.ObjectId(ingredientId)
+    },
+    {
+      $set: {
+        "Ingredients.$.used" : true
+      }
+    }
+  )
+}
+
 async function deleteIngredient(userId, ingredientId) {
   return await userData.updateOne(
     { _id: userId },
@@ -184,5 +199,6 @@ module.exports = {
   checkUser,
   saveRecipe,
   deleteIngredient,
+  useIngredient,
   deleteRecipe,
 };
