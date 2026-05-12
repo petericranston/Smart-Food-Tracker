@@ -28,6 +28,9 @@ const ingredientSchema = new Schema({
   Unit: { type: String, default: null },
   FoodGroup: { type: String, default: null },
   StorageState: { type: String, default: null },
+  Emoji: { type: String, default: null },
+  Used : {type: Boolean, default: false}, //Added instead of immedietly deleting
+
 });
 
 const userSchema = new Schema({
