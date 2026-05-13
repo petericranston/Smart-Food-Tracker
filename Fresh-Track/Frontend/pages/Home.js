@@ -577,7 +577,7 @@ export default function Home() {
               <TouchableOpacity
                 onPress={() => setViewingExpire(false)}
                 style={{
-                  backgroundColor: "#ff7723",
+                  backgroundColor: "#50863F",
                   padding: 10,
                   width: "20%",
                   borderRadius: 20,
@@ -596,20 +596,24 @@ export default function Home() {
                 </Text>
               </TouchableOpacity>
 
-              <Text style={[styles.h1, { marginBottom: 5 }]}>Expiring Soon</Text>
+              <Text style={[styles.h1, { marginBottom: 5 }]}>
+                Expiring Soon
+              </Text>
               <Text style={styles.h2}>Items expiring in the next 3 days</Text>
 
               <View>
                 {sortedItems
                   .filter((item) => {
                     const daysLeft = Math.ceil(
-                      (new Date(item.ExpiryDate) - new Date()) / (1000 * 60 * 60 * 24)
+                      (new Date(item.ExpiryDate) - new Date()) /
+                        (1000 * 60 * 60 * 24),
                     );
                     return daysLeft <= 3;
                   })
                   .map((item) => {
                     const daysLeft = Math.ceil(
-                      (new Date(item.ExpiryDate) - new Date()) / (1000 * 60 * 60 * 24)
+                      (new Date(item.ExpiryDate) - new Date()) /
+                        (1000 * 60 * 60 * 24),
                     );
 
                     const getExpiryColor = (daysLeft) => {
@@ -623,7 +627,11 @@ export default function Home() {
                         style={styles.deleteAction}
                         onPress={() => deleteIngredient(item._id)}
                       >
-                        <Ionicons name="trash-outline" size={20} color="white" />
+                        <Ionicons
+                          name="trash-outline"
+                          size={20}
+                          color="white"
+                        />
                       </TouchableOpacity>
                     );
 
@@ -655,7 +663,8 @@ export default function Home() {
 
                 {sortedItems.filter((item) => {
                   const daysLeft = Math.ceil(
-                    (new Date(item.ExpiryDate) - new Date()) / (1000 * 60 * 60 * 24)
+                    (new Date(item.ExpiryDate) - new Date()) /
+                      (1000 * 60 * 60 * 24),
                   );
                   return daysLeft <= 3;
                 }).length === 0 && (
