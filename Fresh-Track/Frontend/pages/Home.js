@@ -39,6 +39,7 @@ export default function Home() {
   const [formPassword, setFormPassword] = useState("");
 
   const [viewingInv, setViewingInv] = useState(false);
+  const [viewingExpire, setViewingExpire] = useState(false);
 
   const [AllIngredients, setAllIngredients] = useState([]);
 
@@ -215,10 +216,12 @@ export default function Home() {
                   title="Items Tracked"
                 />
               </TouchableOpacity>
-              <DashboardWidget
-                count={expiringSoonCount}
-                title="Expiring Soon"
-              />
+              <TouchableOpacity onPress={() => setViewingExpire(true)}>
+                <DashboardWidget
+                  count={expiringSoonCount}
+                  title="Expiring Soon"
+                />
+              </TouchableOpacity>
             </View>
 
             <View style={{ marginTop: 50 }}>
@@ -234,15 +237,6 @@ export default function Home() {
                     }}
                   >
                     <Text style={styles.h3}>Needs Attention</Text>
-                    <Text
-                      style={{
-                        color: "#50863F",
-                        textDecorationLine: "underline",
-                      }}
-                      onPress={() => AllIngredients}
-                    >
-                      See All
-                    </Text>
                   </View>
                   <View>
                     {sortedItems.slice(0, 3).map((item) => {
@@ -558,6 +552,123 @@ export default function Home() {
                   })
                 ) : (
                   <Text>Please add items to get started</Text>
+                )}
+              </View>
+            </ScrollView>
+          </View>
+        </GestureHandlerRootView>
+      </Modal>
+
+      {/* expiring soon modal */}
+      <Modal
+        visible={viewingExpire}
+        transparent={false}
+        animationType="slide"
+        onRequestClose={() => setViewingExpire(false)}
+      >
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <View
+            style={[
+              styles.modalContainer,
+              { paddingTop: insets.top + 25, paddingLeft: 25 },
+            ]}
+          >
+            <ScrollView>
+              <TouchableOpacity
+                onPress={() => setViewingExpire(false)}
+                style={{
+                  backgroundColor: "#ff7723",
+                  padding: 10,
+                  width: "20%",
+                  borderRadius: 20,
+                  marginBottom: 20,
+                }}
+              >
+                <Text
+                  style={{
+                    color: "white",
+                    textAlign: "center",
+                    fontWeight: "Inter_600SemiBold",
+                    fontSize: RFValue(14),
+                  }}
+                >
+                  Close
+                </Text>
+              </TouchableOpacity>
+
+              <Text style={[styles.h1, { marginBottom: 5 }]}>Expiring Soon</Text>
+              <Text style={styles.h2}>Items expiring in the next 3 days</Text>
+
+              <View>
+                {sortedItems
+                  .filter((item) => {
+                    const daysLeft = Math.ceil(
+                      (new Date(item.ExpiryDate) - new Date()) / (1000 * 60 * 60 * 24)
+                    );
+                    return daysLeft <= 3;
+                  })
+                  .map((item) => {
+                    const daysLeft = Math.ceil(
+                      (new Date(item.ExpiryDate) - new Date()) / (1000 * 60 * 60 * 24)
+                    );
+
+                    const getExpiryColor = (daysLeft) => {
+                      if (daysLeft <= 2) return "#ff1717";
+                      if (daysLeft <= 6) return "#ff7723";
+                      return "#50863F";
+                    };
+
+                    const renderRightActions = () => (
+                      <TouchableOpacity
+                        style={styles.deleteAction}
+                        onPress={() => deleteIngredient(item._id)}
+                      >
+                        <Ionicons name="trash-outline" size={20} color="white" />
+                      </TouchableOpacity>
+                    );
+
+                    return (
+                      <Swipeable
+                        key={item._id}
+                        renderRightActions={renderRightActions}
+                      >
+                        <ExpiringWidget
+                          key={item._id}
+                          image={require("../assets/foodplaceholders/mschicken.png")}
+                          name={item.IngredientName}
+                          expireMessage={`This item is expiring in ${daysLeft} days!`}
+                          expiringIn={`${daysLeft} days`}
+                          dateStyling={{
+                            backgroundColor: getExpiryColor(daysLeft),
+                            justifyContent: "center",
+                            paddingLeft: 10,
+                            paddingRight: 10,
+                            height: 33,
+                            marginTop: 5,
+                            borderRadius: 10,
+                          }}
+                          emoji={item.Emoji}
+                        />
+                      </Swipeable>
+                    );
+                  })}
+
+                {sortedItems.filter((item) => {
+                  const daysLeft = Math.ceil(
+                    (new Date(item.ExpiryDate) - new Date()) / (1000 * 60 * 60 * 24)
+                  );
+                  return daysLeft <= 3;
+                }).length === 0 && (
+                  <Text
+                    style={{
+                      fontSize: RFValue(14),
+                      fontFamily: "Inter_500Medium",
+                      color: "#707070",
+                      marginTop: 20,
+                    }}
+                  >
+                    Nothing expiring soon — you're all good! 🎉
+                  </Text>
                 )}
               </View>
             </ScrollView>
