@@ -200,14 +200,14 @@ export default function Home() {
 
           <View style={styles.mainContent}>
             {/* search bar */}
-            <View style={styles.searchBar}>
+            {/* <View style={styles.searchBar}>
               <Feather name="search" size={18} color="#697665" />
               <TextInput
                 style={styles.searchInput}
                 placeholder="Search items..."
                 placeholderTextColor="#697665"
               />
-            </View>
+            </View> */}
 
             <View style={styles.dashWidgetContainer}>
               <TouchableOpacity onPress={() => setViewingInv(true)}>
