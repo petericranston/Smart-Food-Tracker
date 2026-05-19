@@ -140,7 +140,7 @@ ${JSON.stringify(sortedIngredients, null, 2)}
     try {
       const result = await openai.chat.completions.create({
         model: "gpt-4o",
-        temperature: 0,
+        temperature: 0.8,
         max_tokens: 2500,
         messages: [
           {
@@ -185,24 +185,31 @@ ${JSON.stringify(sortedIngredients, null, 2)}
         const recipeWithIngId = data.recipes.map((recipe) => ({
           ...recipe,
           ingredientsUsed: recipe.ingredientsUsed.map((recipeIngredient) => {
-            const idMatch = ingredients.find( //find the ingredient in the pntry with same name as ingredient in recipe
+            const idMatch = ingredients.find(
+              //find the ingredient in the pntry with same name as ingredient in recipe
               (pantryItem) =>
-                pantryItem.name.toLowerCase().includes(recipeIngredient.name.toLowerCase()) ||
-                recipeIngredient.name.toLowerCase().includes(pantryItem.name.toLowerCase()) //sets both to lowercase to avoid mismatch due to capitalisation
+                pantryItem.name
+                  .toLowerCase()
+                  .includes(recipeIngredient.name.toLowerCase()) ||
+                recipeIngredient.name
+                  .toLowerCase()
+                  .includes(pantryItem.name.toLowerCase()), //sets both to lowercase to avoid mismatch due to capitalisation
             );
-            if (!idMatch) console.warn('$recipeIngredient.name not found in pantry to be matched');
+            if (!idMatch)
+              console.warn(
+                "$recipeIngredient.name not found in pantry to be matched",
+              );
             return { ...recipeIngredient, ingredientId: idMatch?._id ?? null };
-          })
-        }))
+          }),
+        }));
         setRecipes(recipeWithIngId);
         onRecipeGeneration?.(recipeWithIngId);
       }
     } catch (err) {
-      console.log('error: ', err)
+      console.log("error: ", err);
     } finally {
       setLoading(false);
     }
-
   };
   return (
     <View style={{ alignItems: "center", marginBottom: 10 }}>
