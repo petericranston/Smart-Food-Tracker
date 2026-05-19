@@ -23,12 +23,12 @@ export default function RecipeTestCompAIEdited({
     dangerouslyAllowBrowser: true,
   });
 
-  useEffect(() => {
-    if (ingredients.length > 0 && !hasAutoTriggered.current) {
-      hasAutoTriggered.current = true;
-      handleTest();
-    }
-  }, [ingredients]);
+  // useEffect(() => {
+  //   if (ingredients.length > 0 && !hasAutoTriggered.current) {
+  //     hasAutoTriggered.current = true;
+  //     handleTest();
+  //   }
+  // }, [ingredients]);
 
   function formatDateDDMMYYYY(date = new Date()) {
     const dd = String(date.getDate()).padStart(2, "0");
@@ -172,18 +172,37 @@ ${JSON.stringify(sortedIngredients, null, 2)}
 
   const handleTest = async () => {
     setLoading(true);
-    console.log("BUTTON PRESSED - handleTest started");
-    const data = await getRecipe();
+    try {
+      console.log("BUTTON PRESSED - handleTest started");
+      const data = await getRecipe();
+      console.log("full recipes:", JSON.stringify(data.recipes, null, 2));
+      // console.log("Data returned from getRecipe:", data);
+      // console.log("onRecipeGeneration prop:", onRecipeGeneration);
 
-    console.log("Data returned from getRecipe:", data);
-    console.log("onRecipeGeneration prop:", onRecipeGeneration);
-
-    if (data?.recipes) {
-      setRecipes(data.recipes);
-      onRecipeGeneration?.(data.recipes);
+      if (data?.recipes) {
+        console.log("ingredients prop:", ingredients);
+        //maps the ingredient Id from pantry to the ingredients in AI recipe through ingredient name
+        const recipeWithIngId = data.recipes.map((recipe) => ({
+          ...recipe,
+          ingredientsUsed: recipe.ingredientsUsed.map((recipeIngredient) => {
+            const idMatch = ingredients.find( //find the ingredient in the pntry with same name as ingredient in recipe
+              (pantryItem) =>
+                pantryItem.name.toLowerCase().includes(recipeIngredient.name.toLowerCase()) ||
+                recipeIngredient.name.toLowerCase().includes(pantryItem.name.toLowerCase()) //sets both to lowercase to avoid mismatch due to capitalisation
+            );
+            if (!idMatch) console.warn('$recipeIngredient.name not found in pantry to be matched');
+            return { ...recipeIngredient, ingredientId: idMatch?._id ?? null };
+          })
+        }))
+        setRecipes(recipeWithIngId);
+        onRecipeGeneration?.(recipeWithIngId);
+      }
+    } catch (err) {
+      console.log('error: ', err)
+    } finally {
+      setLoading(false);
     }
 
-    setLoading(false);
   };
   return (
     <View style={{ alignItems: "center", marginBottom: 10 }}>

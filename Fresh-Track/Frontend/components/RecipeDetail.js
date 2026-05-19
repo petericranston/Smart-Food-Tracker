@@ -10,9 +10,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { RFValue } from "react-native-responsive-fontsize";
 import UseRecipeButton from "./useRecipeButton";
 
-export default function RecipeDetail({ recipe, onClose }) {
+export default function RecipeDetail({ recipe, onClose, username }) {
   const insets = useSafeAreaInsets();
-  console.log ("Ingredients used in recipe",recipe.ingredientsUsed, isSaved);
+  console.log("Ingredients used in recipe", recipe.ingredientsUsed);
   return (
     <Modal
       visible={true}
@@ -85,7 +85,8 @@ export default function RecipeDetail({ recipe, onClose }) {
             {/* button here */}
             <UseRecipeButton
               recipe={recipe}
-              // userId={user.id} //might need not sure
+              username={username}
+            // userId={user.id} //might need not sure
             />
 
           </View>

@@ -7,6 +7,7 @@ const recipeIngredientsSchema = new Schema({
   name: String,
   amount: String,
   expiryDate: String,
+  ingredientId: String, //added so ingredients in have id 
 });
 
 const recipeSchema = new Schema({
@@ -30,7 +31,7 @@ const ingredientSchema = new Schema({
   FoodGroup: { type: String, default: null },
   StorageState: { type: String, default: null },
   Emoji: { type: String, default: null },
-  Used : {type: Boolean, default: false}, //Added instead of immedietly deleting
+  Used: { type: Boolean, default: false }, //Added instead of immedietly deleting
 
 });
 
@@ -152,15 +153,16 @@ async function checkUser(username, password) {
 }
 
 //function to 'use' single ingredient
-async function useIngredient(userId,ingredientId){
+async function useIngredient(userId, ingredientId) {
+  console.log('using ingredient')
   return await userData.updateOne(
     {
-      _id:userId,
+      _id: userId,
       "Ingredients._id": new mongoose.Types.ObjectId(ingredientId)
     },
     {
       $set: {
-        "Ingredients.$.used" : true
+        "Ingredients.$.Used": true
       }
     }
   )

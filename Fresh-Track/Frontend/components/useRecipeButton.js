@@ -11,34 +11,39 @@ import { RFValue } from "react-native-responsive-fontsize";
 
 
 
-export default function UseRecipeButton({recipe}){
+export default function UseRecipeButton({ recipe, username }) {
+  const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
-    const handlePress = async () => {
-        console.log('hello');
-        recipe.usedIngredients;
-        for(const ingredient of recipe.usedIngredients){ //for each ingredient in recipe
-            await fetch(`${API_URL}/api/useIngredient`, { //runs useIngredient function through express route
-                method: "PUT",
-                headers: {
-                    "Content-Type" : "application/json"
-                },
-                body : JSON.stringify({
-                    userId,
-                    ingredientId: ingredient._id
-                })
-            });
-        }
-        //get the recipe ID and the IDs for each of the ingredients in it
-        //run query function to update the ingredients used field based on the ID from recipe.
+  const handlePress = async () => {
+    console.log("recipe:", recipe);
+    console.log("recipe.ingredients:", recipe.ingredientsUsed);
+    console.log("is array:", Array.isArray(recipe.ingredientsUsed));
+    console.log("length:", recipe.ingredientsUsed?.length);
+
+    for (const ingredient of recipe.ingredientsUsed) { //for each ingredient in recipe
+      console.log('test test')
+      await fetch(`${API_URL}/api/useIngredient`, { //runs useIngredient function through express route
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          username,
+          ingredientId: ingredient.ingredientId
+        })
+      });
     }
+    //get the recipe ID and the IDs for each of the ingredients in it
+    //run query function to update the ingredients used field based on the ID from recipe.
+  }
 
 
 
-    return(
-        <TouchableOpacity style={styles.btn} onPress={handlePress}>
-                  <Text style={styles.btnText}>Use Recipe</Text>
-        </TouchableOpacity>
-    ) 
+  return (
+    <TouchableOpacity style={styles.btn} onPress={handlePress}>
+      <Text style={styles.btnText}>Use Recipe</Text>
+    </TouchableOpacity>
+  )
 }
 
 const styles = StyleSheet.create({
