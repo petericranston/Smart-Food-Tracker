@@ -8,10 +8,11 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { RFValue } from "react-native-responsive-fontsize";
+import UseRecipeButton from "./useRecipeButton";
 
-export default function RecipeDetail({ recipe, onClose }) {
+export default function RecipeDetail({ recipe, onClose, username }) {
   const insets = useSafeAreaInsets();
-
+  console.log("Ingredients used in recipe", recipe.ingredientsUsed);
   return (
     <Modal
       visible={true}
@@ -81,6 +82,13 @@ export default function RecipeDetail({ recipe, onClose }) {
                 <Text style={styles.bulletText}>{step}</Text>
               </View>
             ))}
+            {/* button here */}
+            <UseRecipeButton
+              recipe={recipe}
+              username={username}
+            // userId={user.id} //might need not sure
+            />
+
           </View>
         </ScrollView>
       </View>

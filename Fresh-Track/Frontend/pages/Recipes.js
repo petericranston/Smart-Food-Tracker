@@ -15,7 +15,7 @@ import RecipesWidget from "../components/RecipesWidget";
 import RecipeDetail from "../components/RecipeDetail";
 import { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import RecipeTestCompAIEdited from "../components/recipeTestCompAIEdited";
+import RecipeTestCompAIEdited from "../components/recipeGenerationComp";
 
 export default function Recipes() {
   const insets = useSafeAreaInsets();
@@ -160,6 +160,7 @@ export default function Recipes() {
               ingredients={ingredients.map((i) => ({
                 name: i.IngredientName,
                 expiryDate: i.ExpiryDate,
+                _id: i._id, //added so ingredients have their id
               }))}
               onRecipeGeneration={(recipes) => setGeneratedRecipes(recipes)}
             />
@@ -246,6 +247,7 @@ export default function Recipes() {
         <RecipeDetail
           recipe={selectedRecipe}
           onClose={() => setSelectedRecipe(null)}
+          username={username}   //added so use recipe can access
         />
       )}
     </>

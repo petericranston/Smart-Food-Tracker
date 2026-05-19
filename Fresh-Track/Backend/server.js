@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 
 const dotenv = require("dotenv").config(); //Configuring my .env for secret keys (mongodb)
+console.log("MONGO_URI exists:", !!process.env.MONGO_URI);
+console.log("MONGO_URI preview:", process.env.MONGO_URI?.slice(0, 35));
 const mongoose = require("mongoose");
 
 const app = express();
@@ -35,6 +37,7 @@ app.post("/api/register", async (request, response) => {
 
 app.post("/api/login", async (request, response) => {
   //Login functionality
+  console.log('login', request); //temporary to test if working 
   const user = await database.checkUser(
     request.body.username,
     request.body.password,
@@ -157,5 +160,40 @@ app.delete("/api/deleteIngredient", async (request, response) => {
   } catch (err) {
     console.log(err);
     response.status(500).json({ error: "Server error" });
+  }
+});
+
+// app.put("/api/useIngredient", async (request, response) => {
+//   try {
+//     console.log("Using Item");
+//     const { userId, ingredientId } = request.body;
+//     const used = await database.useIngredient(userId, ingredientId);
+
+//     response.json({
+//       success: true,
+//       message: "Ingredient Used",
+//       used
+//     });
+//   } catch (err) {
+//     console.log(err);
+//     response.status(500).json({
+//       success: false,
+//     })
+//   }
+// })
+
+app.put("/api/useIngredient", async (request, response) => {
+  try {
+    console.log("Using Item");
+    const { username, ingredientId } = request.body; // ← username instead of userId
+
+    const user = await database.getUserByUsername(username); // ← lookup user
+    if (!user) return response.status(404).json({ error: "User not found" });
+
+    const used = await database.useIngredient(user._id, ingredientId); // ← pass real _id
+    response.json({ success: true, message: "Ingredient Used", used });
+  } catch (err) {
+    console.log(err);
+    response.status(500).json({ success: false });
   }
 });
