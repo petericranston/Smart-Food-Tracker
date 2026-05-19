@@ -37,7 +37,7 @@ app.post("/api/register", async (request, response) => {
 
 app.post("/api/login", async (request, response) => {
   //Login functionality
-  console.log('login', request); //temporary to test if working 
+  console.log("login", request); //temporary to test if working
   const user = await database.checkUser(
     request.body.username,
     request.body.password,
